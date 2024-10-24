@@ -82,6 +82,48 @@ pub fn cursor_to(line: u8, column: u8) !void {
     _ = try write_out.print("\x1B[{d};{d}H", .{ line, column });
 }
 
+/// Move cursor up n lines
+pub fn cursor_up(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}A", .{N});
+}
+
+/// Move cursor down n lines
+pub fn cursor_down(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}B", .{N});
+}
+
+/// Move cursor right n columns
+pub fn cursor_right(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}C", .{N});
+}
+
+/// Move cursor left n columns
+pub fn cursor_left(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}D", .{N});
+}
+
+/// Move cursor to beginning of next line, n lines down
+pub fn cursor_down_b(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}E", .{N});
+}
+
+/// Move cursor to beginning of next line, n lines up
+pub fn cursor_up_b(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}F", .{N});
+}
+
+/// Move cursor to column n
+pub fn cursor_column(n: ?u8) !void {
+    const N = n orelse 1;
+    _ = try write_out.print("\x1B[{d}G", .{N});
+}
+
 /// Set foreground color of text by value
 pub fn set_color_fv(color: u8) !void {
     _ = try write_out.print("\x1B[38;5;{}m", .{color});

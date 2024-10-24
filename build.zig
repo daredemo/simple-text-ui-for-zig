@@ -3,7 +3,7 @@ const std = @import("std");
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -16,10 +16,10 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const lib = b.addStaticLibrary(.{
-        .name = "simple-text-ui-for-zig",
+        .name = "terminal",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
-        .root_source_file = b.path("src/root.zig"),
+        .root_source_file = b.path("src/cTermio.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -27,7 +27,7 @@ pub fn build(b: *std.Build) void {
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
-    // lib.linkLibC();
+    lib.linkLibC();
     b.installArtifact(lib);
 
     // const exe = b.addExecutable(.{
@@ -38,15 +38,20 @@ pub fn build(b: *std.Build) void {
     // });
 
     if (b.option(bool, "examples", "install examples") orelse false) {
-        const examples = b.addExecutable(.{
-            .name = "examples",
-            .root_source_file = b.path("src/ex_read_input_from_term.zig"),
-            .target = target,
-            .optimize = optimize,
-        });
-        examples.linkLibrary(lib);
-        // examples.linkLibC();
-        b.installArtifact(examples);
+        const example_files: [2][]const u8 = .{ "src/ex_read_input_from_term.zig", "src/ex_multi_threaded.zig" };
+        for (example_files, 0..) |ex, index| {
+            var ex_buffer: [512]u8 = undefined;
+            const ex_name = try std.fmt.bufPrint(&ex_buffer, "example_{}", .{index});
+            const examples = b.addExecutable(.{
+                .name = ex_name,
+                .root_source_file = b.path(ex),
+                .target = target,
+                .optimize = optimize,
+            });
+            examples.linkLibrary(lib);
+            // examples.linkLibC();
+            b.installArtifact(examples);
+        }
     }
 
     // This declares intent for the executable to be installed into the

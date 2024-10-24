@@ -41,7 +41,7 @@ pub fn main() !void {
     _ = try A_Term.set_color_f_RGB(null, null, null);
     _ = try write_out.print("TOP LEVEL TITLE", .{});
     _ = try A_Term.cursor_to(2, 0);
-    _ = try A_Term.set_color_bf(ColorB.White, ColorF.Blue);
+    _ = try A_Term.set_color_bf(ColorB.BrightWhite, ColorF.Blue);
     _ = try write_out.print("The second level title", .{});
     _ = try A_Term.cursor_to(3, 0);
     _ = try A_Term.set_color_mbf(ColorM.Dim, ColorB.White, ColorF.Blue);
@@ -49,6 +49,9 @@ pub fn main() !void {
     _ = try A_Term.set_color_mbf(ColorM.Reset, null, null);
     _ = try A_Term.cursor_down_b(null);
     _ = try A_Term.set_color_mbf(ColorM.Underline, ColorB.Default, ColorF.Blue);
+    _ = try write_out.print("More text", .{});
+    _ = try A_Term.cursor_down_b(null);
+    _ = try A_Term.set_color_mbf(ColorM.Underline, ColorB.Default, ColorF.BrightBlue);
     _ = try write_out.print("More text", .{});
     _ = try A_Term.cursor_down_b(null);
 

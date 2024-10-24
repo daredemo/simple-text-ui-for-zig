@@ -13,6 +13,14 @@ pub const ColorForeground = enum(u8) {
     Cyan = 36,
     White = 37,
     Default = 39,
+    BrightBlack = 90,
+    BrightRed = 91,
+    BrightGreen = 92,
+    BrightYellow = 93,
+    BrightBlue = 94,
+    BrightMagenta = 95,
+    BrightCyan = 96,
+    BrightWhite = 97,
 };
 
 /// Background colors
@@ -27,6 +35,14 @@ pub const ColorBackground = enum(u8) {
     Cyan = 46,
     White = 47,
     Default = 49,
+    BrightBlack = 100,
+    BrightRed = 101,
+    BrightGreen = 102,
+    BrightYellow = 103,
+    BrightBlue = 104,
+    BrightMagenta = 105,
+    BrightCyan = 106,
+    BrightWhite = 107,
 };
 
 /// Color/Graphics modes
@@ -69,11 +85,52 @@ pub fn ensable_cursor() !void {
     _ = try write_out.print("\x1B[?25h", .{});
 }
 
+/// Erase from cursor until the end of screen
+pub fn erase_c_e_s() !void {
+    _ = try write_out.print("\x1B[0J", .{});
+}
+
+/// Erase from cursor until the end of screen
+pub fn erase_c_b_s() !void {
+    _ = try write_out.print("\x1B[1J", .{});
+}
+
+/// Erase the whole screen
+pub fn erase_s() !void {
+    _ = try write_out.print("\x1B[2J", .{});
+}
+
+/// Erase saved lines
+pub fn erase_saved_l() !void {
+    _ = try write_out.print("\x1B[3J", .{});
+}
+
+/// Erase from cursor until end of line
+pub fn erase_c_e_l() !void {
+    _ = try write_out.print("\x1B[0K", .{});
+}
+
+/// Erase from cursor until the beginning of line
+pub fn erase_c_b_l() !void {
+    _ = try write_out.print("\x1B[1K", .{});
+}
+
+/// Erase entire line
+pub fn erase_l() !void {
+    _ = try write_out.print("\x1B[2K", .{});
+}
+
 /// Clear screen and move cursor to "home"
 pub fn clear_screen() !void {
     // clear screen
-    _ = try write_out.print("\x1B[2J", .{});
+    // _ = try write_out.print("\x1B[2J", .{});
+    _ = try erase_s();
     // move cursor to "home" position
+    _ = try cursor_home();
+    // _ = try write_out.print("\x1B[H", .{});
+}
+
+pub fn cursor_home() !void {
     _ = try write_out.print("\x1B[H", .{});
 }
 

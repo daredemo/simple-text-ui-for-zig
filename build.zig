@@ -27,7 +27,7 @@ pub fn build(b: *std.Build) void {
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
-    lib.linkLibC();
+    // lib.linkLibC();
     b.installArtifact(lib);
 
     // const exe = b.addExecutable(.{
@@ -36,6 +36,18 @@ pub fn build(b: *std.Build) void {
     //     .target = target,
     //     .optimize = optimize,
     // });
+
+    if (b.option(bool, "examples", "install examples") orelse false) {
+        const examples = b.addExecutable(.{
+            .name = "examples",
+            .root_source_file = b.path("src/ex_read_input_from_term.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+        examples.linkLibrary(lib);
+        // examples.linkLibC();
+        b.installArtifact(examples);
+    }
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default

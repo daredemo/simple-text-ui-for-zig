@@ -1,4 +1,6 @@
 const std = @import("std");
+const CharReader = @import("CharReader.zig");
+const ANSI_Terminal = @import("ansi_terminal.zig");
 const testing = std.testing;
 
 export fn add(a: i32, b: i32) i32 {

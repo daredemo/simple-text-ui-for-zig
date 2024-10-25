@@ -1,3 +1,5 @@
+#include <asm-generic/ioctls.h>
+#include <sys/ioctl.h>
 #include <termio.h>
 #include <termios.h>
 #include <unistd.h>
@@ -28,4 +30,10 @@ void disable_echo_and_canonical_mode(struct termios* state) {
 // Ignore SIGINT
 void set_signal(){
     signal(SIGINT, signal_handler);
+}
+
+struct winsize get_terminal_size() {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w;
 }

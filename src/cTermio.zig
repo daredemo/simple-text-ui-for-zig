@@ -54,6 +54,21 @@ pub const __builtin_assume = @import("std").zig.c_builtins.__builtin_assume;
 pub const __builtin_unreachable = @import("std").zig.c_builtins.__builtin_unreachable;
 pub const __builtin_constant_p = @import("std").zig.c_builtins.__builtin_constant_p;
 pub const __builtin_mul_overflow = @import("std").zig.c_builtins.__builtin_mul_overflow;
+pub const struct_winsize = extern struct {
+    ws_row: c_ushort = @import("std").mem.zeroes(c_ushort),
+    ws_col: c_ushort = @import("std").mem.zeroes(c_ushort),
+    ws_xpixel: c_ushort = @import("std").mem.zeroes(c_ushort),
+    ws_ypixel: c_ushort = @import("std").mem.zeroes(c_ushort),
+};
+pub const struct_termio = extern struct {
+    c_iflag: c_ushort = @import("std").mem.zeroes(c_ushort),
+    c_oflag: c_ushort = @import("std").mem.zeroes(c_ushort),
+    c_cflag: c_ushort = @import("std").mem.zeroes(c_ushort),
+    c_lflag: c_ushort = @import("std").mem.zeroes(c_ushort),
+    c_line: u8 = @import("std").mem.zeroes(u8),
+    c_cc: [8]u8 = @import("std").mem.zeroes([8]u8),
+};
+pub extern fn ioctl(__fd: c_int, __request: c_ulong, ...) c_int;
 pub const __u_char = u8;
 pub const __u_short = c_ushort;
 pub const __u_int = c_uint;
@@ -146,21 +161,6 @@ pub extern fn tcdrain(__fd: c_int) c_int;
 pub extern fn tcflush(__fd: c_int, __queue_selector: c_int) c_int;
 pub extern fn tcflow(__fd: c_int, __action: c_int) c_int;
 pub extern fn tcgetsid(__fd: c_int) __pid_t;
-pub const struct_winsize = extern struct {
-    ws_row: c_ushort = @import("std").mem.zeroes(c_ushort),
-    ws_col: c_ushort = @import("std").mem.zeroes(c_ushort),
-    ws_xpixel: c_ushort = @import("std").mem.zeroes(c_ushort),
-    ws_ypixel: c_ushort = @import("std").mem.zeroes(c_ushort),
-};
-pub const struct_termio = extern struct {
-    c_iflag: c_ushort = @import("std").mem.zeroes(c_ushort),
-    c_oflag: c_ushort = @import("std").mem.zeroes(c_ushort),
-    c_cflag: c_ushort = @import("std").mem.zeroes(c_ushort),
-    c_lflag: c_ushort = @import("std").mem.zeroes(c_ushort),
-    c_line: u8 = @import("std").mem.zeroes(u8),
-    c_cc: [8]u8 = @import("std").mem.zeroes([8]u8),
-};
-pub extern fn ioctl(__fd: c_int, __request: c_ulong, ...) c_int;
 pub const gid_t = __gid_t;
 pub const uid_t = __uid_t;
 pub const off_t = __off_t;
@@ -1042,6 +1042,12 @@ pub export fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) voi
 pub export fn set_signal() void {
     _ = signal(@as(c_int, 2), &signal_handler);
 }
+pub export fn get_terminal_size() struct_winsize {
+    var w: struct_winsize = undefined;
+    _ = &w;
+    _ = ioctl(@as(c_int, 1), @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 21523)))), &w);
+    return w;
+}
 pub const __llvm__ = @as(c_int, 1);
 pub const __clang__ = @as(c_int, 1);
 pub const __clang_major__ = @as(c_int, 18);
@@ -1469,7 +1475,190 @@ pub const __STDC_UTF_32__ = @as(c_int, 1);
 pub const __GLIBC_MINOR__ = @as(c_int, 39);
 pub const _DEBUG = @as(c_int, 1);
 pub const __GCC_HAVE_DWARF2_CFI_ASM = @as(c_int, 1);
-pub const _TERMIOS_H = @as(c_int, 1);
+pub const __ASM_GENERIC_IOCTLS_H = "";
+pub const _LINUX_IOCTL_H = "";
+pub const _ASM_GENERIC_IOCTL_H = "";
+pub const _IOC_NRBITS = @as(c_int, 8);
+pub const _IOC_TYPEBITS = @as(c_int, 8);
+pub const _IOC_SIZEBITS = @as(c_int, 14);
+pub const _IOC_DIRBITS = @as(c_int, 2);
+pub const _IOC_NRMASK = (@as(c_int, 1) << _IOC_NRBITS) - @as(c_int, 1);
+pub const _IOC_TYPEMASK = (@as(c_int, 1) << _IOC_TYPEBITS) - @as(c_int, 1);
+pub const _IOC_SIZEMASK = (@as(c_int, 1) << _IOC_SIZEBITS) - @as(c_int, 1);
+pub const _IOC_DIRMASK = (@as(c_int, 1) << _IOC_DIRBITS) - @as(c_int, 1);
+pub const _IOC_NRSHIFT = @as(c_int, 0);
+pub const _IOC_TYPESHIFT = _IOC_NRSHIFT + _IOC_NRBITS;
+pub const _IOC_SIZESHIFT = _IOC_TYPESHIFT + _IOC_TYPEBITS;
+pub const _IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS;
+pub const _IOC_NONE = @as(c_uint, 0);
+pub const _IOC_WRITE = @as(c_uint, 1);
+pub const _IOC_READ = @as(c_uint, 2);
+pub inline fn _IOC(dir: anytype, @"type": anytype, nr: anytype, size: anytype) @TypeOf((((dir << _IOC_DIRSHIFT) | (@"type" << _IOC_TYPESHIFT)) | (nr << _IOC_NRSHIFT)) | (size << _IOC_SIZESHIFT)) {
+    _ = &dir;
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return (((dir << _IOC_DIRSHIFT) | (@"type" << _IOC_TYPESHIFT)) | (nr << _IOC_NRSHIFT)) | (size << _IOC_SIZESHIFT);
+}
+pub inline fn _IOC_TYPECHECK(t: anytype) @TypeOf(@import("std").zig.c_translation.sizeof(t)) {
+    _ = &t;
+    return @import("std").zig.c_translation.sizeof(t);
+}
+pub inline fn _IO(@"type": anytype, nr: anytype) @TypeOf(_IOC(_IOC_NONE, @"type", nr, @as(c_int, 0))) {
+    _ = &@"type";
+    _ = &nr;
+    return _IOC(_IOC_NONE, @"type", nr, @as(c_int, 0));
+}
+pub inline fn _IOR(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ, @"type", nr, _IOC_TYPECHECK(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_READ, @"type", nr, _IOC_TYPECHECK(size));
+}
+pub inline fn _IOW(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size));
+}
+pub inline fn _IOWR(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ | _IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_READ | _IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size));
+}
+pub inline fn _IOR_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_READ, @"type", nr, @import("std").zig.c_translation.sizeof(size));
+}
+pub inline fn _IOW_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size));
+}
+pub inline fn _IOWR_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ | _IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
+    _ = &@"type";
+    _ = &nr;
+    _ = &size;
+    return _IOC(_IOC_READ | _IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size));
+}
+pub inline fn _IOC_DIR(nr: anytype) @TypeOf((nr >> _IOC_DIRSHIFT) & _IOC_DIRMASK) {
+    _ = &nr;
+    return (nr >> _IOC_DIRSHIFT) & _IOC_DIRMASK;
+}
+pub inline fn _IOC_TYPE(nr: anytype) @TypeOf((nr >> _IOC_TYPESHIFT) & _IOC_TYPEMASK) {
+    _ = &nr;
+    return (nr >> _IOC_TYPESHIFT) & _IOC_TYPEMASK;
+}
+pub inline fn _IOC_NR(nr: anytype) @TypeOf((nr >> _IOC_NRSHIFT) & _IOC_NRMASK) {
+    _ = &nr;
+    return (nr >> _IOC_NRSHIFT) & _IOC_NRMASK;
+}
+pub inline fn _IOC_SIZE(nr: anytype) @TypeOf((nr >> _IOC_SIZESHIFT) & _IOC_SIZEMASK) {
+    _ = &nr;
+    return (nr >> _IOC_SIZESHIFT) & _IOC_SIZEMASK;
+}
+pub const IOC_IN = _IOC_WRITE << _IOC_DIRSHIFT;
+pub const IOC_OUT = _IOC_READ << _IOC_DIRSHIFT;
+pub const IOC_INOUT = (_IOC_WRITE | _IOC_READ) << _IOC_DIRSHIFT;
+pub const IOCSIZE_MASK = _IOC_SIZEMASK << _IOC_SIZESHIFT;
+pub const IOCSIZE_SHIFT = _IOC_SIZESHIFT;
+pub const TCGETS = @as(c_int, 0x5401);
+pub const TCSETS = @as(c_int, 0x5402);
+pub const TCSETSW = @as(c_int, 0x5403);
+pub const TCSETSF = @as(c_int, 0x5404);
+pub const TCGETA = @as(c_int, 0x5405);
+pub const TCSETA = @as(c_int, 0x5406);
+pub const TCSETAW = @as(c_int, 0x5407);
+pub const TCSETAF = @as(c_int, 0x5408);
+pub const TCSBRK = @as(c_int, 0x5409);
+pub const TCXONC = @as(c_int, 0x540A);
+pub const TCFLSH = @as(c_int, 0x540B);
+pub const TIOCEXCL = @as(c_int, 0x540C);
+pub const TIOCNXCL = @as(c_int, 0x540D);
+pub const TIOCSCTTY = @as(c_int, 0x540E);
+pub const TIOCGPGRP = @as(c_int, 0x540F);
+pub const TIOCSPGRP = @as(c_int, 0x5410);
+pub const TIOCOUTQ = @as(c_int, 0x5411);
+pub const TIOCSTI = @as(c_int, 0x5412);
+pub const TIOCGWINSZ = @as(c_int, 0x5413);
+pub const TIOCSWINSZ = @as(c_int, 0x5414);
+pub const TIOCMGET = @as(c_int, 0x5415);
+pub const TIOCMBIS = @as(c_int, 0x5416);
+pub const TIOCMBIC = @as(c_int, 0x5417);
+pub const TIOCMSET = @as(c_int, 0x5418);
+pub const TIOCGSOFTCAR = @as(c_int, 0x5419);
+pub const TIOCSSOFTCAR = @as(c_int, 0x541A);
+pub const FIONREAD = @as(c_int, 0x541B);
+pub const TIOCINQ = FIONREAD;
+pub const TIOCLINUX = @as(c_int, 0x541C);
+pub const TIOCCONS = @as(c_int, 0x541D);
+pub const TIOCGSERIAL = @as(c_int, 0x541E);
+pub const TIOCSSERIAL = @as(c_int, 0x541F);
+pub const TIOCPKT = @as(c_int, 0x5420);
+pub const FIONBIO = @as(c_int, 0x5421);
+pub const TIOCNOTTY = @as(c_int, 0x5422);
+pub const TIOCSETD = @as(c_int, 0x5423);
+pub const TIOCGETD = @as(c_int, 0x5424);
+pub const TCSBRKP = @as(c_int, 0x5425);
+pub const TIOCSBRK = @as(c_int, 0x5427);
+pub const TIOCCBRK = @as(c_int, 0x5428);
+pub const TIOCGSID = @as(c_int, 0x5429);
+pub const TCGETS2 = @compileError("unable to translate macro: undefined identifier `termios2`");
+// /usr/include/asm-generic/ioctls.h:61:9
+pub const TCSETS2 = @compileError("unable to translate macro: undefined identifier `termios2`");
+// /usr/include/asm-generic/ioctls.h:62:9
+pub const TCSETSW2 = @compileError("unable to translate macro: undefined identifier `termios2`");
+// /usr/include/asm-generic/ioctls.h:63:9
+pub const TCSETSF2 = @compileError("unable to translate macro: undefined identifier `termios2`");
+// /usr/include/asm-generic/ioctls.h:64:9
+pub const TIOCGRS485 = @as(c_int, 0x542E);
+pub const TIOCSRS485 = @as(c_int, 0x542F);
+pub const TIOCGPTN = _IOR('T', @as(c_int, 0x30), c_uint);
+pub const TIOCSPTLCK = _IOW('T', @as(c_int, 0x31), c_int);
+pub const TIOCGDEV = _IOR('T', @as(c_int, 0x32), c_uint);
+pub const TCGETX = @as(c_int, 0x5432);
+pub const TCSETX = @as(c_int, 0x5433);
+pub const TCSETXF = @as(c_int, 0x5434);
+pub const TCSETXW = @as(c_int, 0x5435);
+pub const TIOCSIG = _IOW('T', @as(c_int, 0x36), c_int);
+pub const TIOCVHANGUP = @as(c_int, 0x5437);
+pub const TIOCGPKT = _IOR('T', @as(c_int, 0x38), c_int);
+pub const TIOCGPTLCK = _IOR('T', @as(c_int, 0x39), c_int);
+pub const TIOCGEXCL = _IOR('T', @as(c_int, 0x40), c_int);
+pub const TIOCGPTPEER = _IO('T', @as(c_int, 0x41));
+pub const TIOCGISO7816 = @compileError("unable to translate macro: undefined identifier `serial_iso7816`");
+// /usr/include/asm-generic/ioctls.h:82:9
+pub const TIOCSISO7816 = @compileError("unable to translate macro: undefined identifier `serial_iso7816`");
+// /usr/include/asm-generic/ioctls.h:83:9
+pub const FIONCLEX = @as(c_int, 0x5450);
+pub const FIOCLEX = @as(c_int, 0x5451);
+pub const FIOASYNC = @as(c_int, 0x5452);
+pub const TIOCSERCONFIG = @as(c_int, 0x5453);
+pub const TIOCSERGWILD = @as(c_int, 0x5454);
+pub const TIOCSERSWILD = @as(c_int, 0x5455);
+pub const TIOCGLCKTRMIOS = @as(c_int, 0x5456);
+pub const TIOCSLCKTRMIOS = @as(c_int, 0x5457);
+pub const TIOCSERGSTRUCT = @as(c_int, 0x5458);
+pub const TIOCSERGETLSR = @as(c_int, 0x5459);
+pub const TIOCSERGETMULTI = @as(c_int, 0x545A);
+pub const TIOCSERSETMULTI = @as(c_int, 0x545B);
+pub const TIOCMIWAIT = @as(c_int, 0x545C);
+pub const TIOCGICOUNT = @as(c_int, 0x545D);
+pub const FIOQSIZE = @as(c_int, 0x5460);
+pub const TIOCPKT_DATA = @as(c_int, 0);
+pub const TIOCPKT_FLUSHREAD = @as(c_int, 1);
+pub const TIOCPKT_FLUSHWRITE = @as(c_int, 2);
+pub const TIOCPKT_STOP = @as(c_int, 4);
+pub const TIOCPKT_START = @as(c_int, 8);
+pub const TIOCPKT_NOSTOP = @as(c_int, 16);
+pub const TIOCPKT_DOSTOP = @as(c_int, 32);
+pub const TIOCPKT_IOCTL = @as(c_int, 64);
+pub const TIOCSER_TEMT = @as(c_int, 0x01);
+pub const _SYS_IOCTL_H = @as(c_int, 1);
 pub const _FEATURES_H = @as(c_int, 1);
 pub const __KERNEL_STRICT_NAMES = "";
 pub inline fn __GNUC_PREREQ(maj: anytype, min: anytype) @TypeOf(((__GNUC__ << @as(c_int, 16)) + __GNUC_MINOR__) >= ((maj << @as(c_int, 16)) + min)) {
@@ -1716,6 +1905,120 @@ pub const __stub_revoke = "";
 pub const __stub_setlogin = "";
 pub const __stub_sigreturn = "";
 pub const __stub_stty = "";
+pub const SIOCADDRT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890B, .hex);
+pub const SIOCDELRT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890C, .hex);
+pub const SIOCRTMSG = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890D, .hex);
+pub const SIOCGIFNAME = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8910, .hex);
+pub const SIOCSIFLINK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8911, .hex);
+pub const SIOCGIFCONF = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8912, .hex);
+pub const SIOCGIFFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8913, .hex);
+pub const SIOCSIFFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8914, .hex);
+pub const SIOCGIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8915, .hex);
+pub const SIOCSIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8916, .hex);
+pub const SIOCGIFDSTADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8917, .hex);
+pub const SIOCSIFDSTADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8918, .hex);
+pub const SIOCGIFBRDADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8919, .hex);
+pub const SIOCSIFBRDADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891a, .hex);
+pub const SIOCGIFNETMASK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891b, .hex);
+pub const SIOCSIFNETMASK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891c, .hex);
+pub const SIOCGIFMETRIC = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891d, .hex);
+pub const SIOCSIFMETRIC = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891e, .hex);
+pub const SIOCGIFMEM = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891f, .hex);
+pub const SIOCSIFMEM = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8920, .hex);
+pub const SIOCGIFMTU = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8921, .hex);
+pub const SIOCSIFMTU = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8922, .hex);
+pub const SIOCSIFNAME = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8923, .hex);
+pub const SIOCSIFHWADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8924, .hex);
+pub const SIOCGIFENCAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8925, .hex);
+pub const SIOCSIFENCAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8926, .hex);
+pub const SIOCGIFHWADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8927, .hex);
+pub const SIOCGIFSLAVE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8929, .hex);
+pub const SIOCSIFSLAVE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8930, .hex);
+pub const SIOCADDMULTI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8931, .hex);
+pub const SIOCDELMULTI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8932, .hex);
+pub const SIOCGIFINDEX = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8933, .hex);
+pub const SIOGIFINDEX = SIOCGIFINDEX;
+pub const SIOCSIFPFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8934, .hex);
+pub const SIOCGIFPFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8935, .hex);
+pub const SIOCDIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8936, .hex);
+pub const SIOCSIFHWBROADCAST = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8937, .hex);
+pub const SIOCGIFCOUNT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8938, .hex);
+pub const SIOCGIFBR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8940, .hex);
+pub const SIOCSIFBR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8941, .hex);
+pub const SIOCGIFTXQLEN = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8942, .hex);
+pub const SIOCSIFTXQLEN = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8943, .hex);
+pub const SIOCDARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8953, .hex);
+pub const SIOCGARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8954, .hex);
+pub const SIOCSARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8955, .hex);
+pub const SIOCDRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8960, .hex);
+pub const SIOCGRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8961, .hex);
+pub const SIOCSRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8962, .hex);
+pub const SIOCGIFMAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8970, .hex);
+pub const SIOCSIFMAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8971, .hex);
+pub const SIOCADDDLCI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8980, .hex);
+pub const SIOCDELDLCI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8981, .hex);
+pub const SIOCDEVPRIVATE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x89F0, .hex);
+pub const SIOCPROTOPRIVATE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x89E0, .hex);
+pub const NCC = @as(c_int, 8);
+pub const TIOCM_LE = @as(c_int, 0x001);
+pub const TIOCM_DTR = @as(c_int, 0x002);
+pub const TIOCM_RTS = @as(c_int, 0x004);
+pub const TIOCM_ST = @as(c_int, 0x008);
+pub const TIOCM_SR = @as(c_int, 0x010);
+pub const TIOCM_CTS = @as(c_int, 0x020);
+pub const TIOCM_CAR = @as(c_int, 0x040);
+pub const TIOCM_RNG = @as(c_int, 0x080);
+pub const TIOCM_DSR = @as(c_int, 0x100);
+pub const TIOCM_CD = TIOCM_CAR;
+pub const TIOCM_RI = TIOCM_RNG;
+pub const N_TTY = @as(c_int, 0);
+pub const N_SLIP = @as(c_int, 1);
+pub const N_MOUSE = @as(c_int, 2);
+pub const N_PPP = @as(c_int, 3);
+pub const N_STRIP = @as(c_int, 4);
+pub const N_AX25 = @as(c_int, 5);
+pub const N_X25 = @as(c_int, 6);
+pub const N_6PACK = @as(c_int, 7);
+pub const N_MASC = @as(c_int, 8);
+pub const N_R3964 = @as(c_int, 9);
+pub const N_PROFIBUS_FDL = @as(c_int, 10);
+pub const N_IRDA = @as(c_int, 11);
+pub const N_SMSBLOCK = @as(c_int, 12);
+pub const N_HDLC = @as(c_int, 13);
+pub const N_SYNC_PPP = @as(c_int, 14);
+pub const N_HCI = @as(c_int, 15);
+pub const _SYS_TTYDEFAULTS_H_ = "";
+pub const TTYDEF_IFLAG = ((((BRKINT | ISTRIP) | ICRNL) | IMAXBEL) | IXON) | IXANY;
+pub const TTYDEF_OFLAG = (OPOST | ONLCR) | XTABS;
+pub const TTYDEF_LFLAG = (((((ECHO | ICANON) | ISIG) | IEXTEN) | ECHOE) | ECHOKE) | ECHOCTL;
+pub const TTYDEF_CFLAG = ((CREAD | CS7) | PARENB) | HUPCL;
+pub const TTYDEF_SPEED = B9600;
+pub inline fn CTRL(x: anytype) @TypeOf(x & @as(c_int, 0o37)) {
+    _ = &x;
+    return x & @as(c_int, 0o37);
+}
+pub const CEOF = CTRL('d');
+pub const CEOL = '\x00';
+pub const CERASE = @as(c_int, 0o177);
+pub const CINTR = CTRL('c');
+pub const CSTATUS = '\x00';
+pub const CKILL = CTRL('u');
+pub const CMIN = @as(c_int, 1);
+pub const CQUIT = @as(c_int, 0o34);
+pub const CSUSP = CTRL('z');
+pub const CTIME = @as(c_int, 0);
+pub const CDSUSP = CTRL('y');
+pub const CSTART = CTRL('q');
+pub const CSTOP = CTRL('s');
+pub const CLNEXT = CTRL('v');
+pub const CDISCARD = CTRL('o');
+pub const CWERASE = CTRL('w');
+pub const CREPRINT = CTRL('r');
+pub const CEOT = CEOF;
+pub const CBRK = CEOL;
+pub const CRPRNT = CREPRINT;
+pub const CFLUSH = CDISCARD;
+pub const _TERMIOS_H = @as(c_int, 1);
 pub const _BITS_TYPES_H = @as(c_int, 1);
 pub const __S16_TYPE = c_short;
 pub const __U16_TYPE = c_ushort;
@@ -1912,7 +2215,6 @@ pub const FLUSHO = @as(c_int, 0o010000);
 pub const PENDIN = @as(c_int, 0o040000);
 pub const IEXTEN = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0o100000, .octal);
 pub const EXTPROC = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0o200000, .octal);
-pub const TIOCSER_TEMT = @as(c_int, 0x01);
 pub const TCOOFF = @as(c_int, 0);
 pub const TCOON = @as(c_int, 1);
 pub const TCIOFF = @as(c_int, 2);
@@ -1928,302 +2230,6 @@ pub inline fn CCEQ(val: anytype, c: anytype) @TypeOf((c == val) and (val != _POS
     _ = &c;
     return (c == val) and (val != _POSIX_VDISABLE);
 }
-pub const _SYS_TTYDEFAULTS_H_ = "";
-pub const TTYDEF_IFLAG = ((((BRKINT | ISTRIP) | ICRNL) | IMAXBEL) | IXON) | IXANY;
-pub const TTYDEF_OFLAG = (OPOST | ONLCR) | XTABS;
-pub const TTYDEF_LFLAG = (((((ECHO | ICANON) | ISIG) | IEXTEN) | ECHOE) | ECHOKE) | ECHOCTL;
-pub const TTYDEF_CFLAG = ((CREAD | CS7) | PARENB) | HUPCL;
-pub const TTYDEF_SPEED = B9600;
-pub inline fn CTRL(x: anytype) @TypeOf(x & @as(c_int, 0o37)) {
-    _ = &x;
-    return x & @as(c_int, 0o37);
-}
-pub const CEOF = CTRL('d');
-pub const CEOL = '\x00';
-pub const CERASE = @as(c_int, 0o177);
-pub const CINTR = CTRL('c');
-pub const CSTATUS = '\x00';
-pub const CKILL = CTRL('u');
-pub const CMIN = @as(c_int, 1);
-pub const CQUIT = @as(c_int, 0o34);
-pub const CSUSP = CTRL('z');
-pub const CTIME = @as(c_int, 0);
-pub const CDSUSP = CTRL('y');
-pub const CSTART = CTRL('q');
-pub const CSTOP = CTRL('s');
-pub const CLNEXT = CTRL('v');
-pub const CDISCARD = CTRL('o');
-pub const CWERASE = CTRL('w');
-pub const CREPRINT = CTRL('r');
-pub const CEOT = CEOF;
-pub const CBRK = CEOL;
-pub const CRPRNT = CREPRINT;
-pub const CFLUSH = CDISCARD;
-pub const _SYS_IOCTL_H = @as(c_int, 1);
-pub const __ASM_GENERIC_IOCTLS_H = "";
-pub const _LINUX_IOCTL_H = "";
-pub const _ASM_GENERIC_IOCTL_H = "";
-pub const _IOC_NRBITS = @as(c_int, 8);
-pub const _IOC_TYPEBITS = @as(c_int, 8);
-pub const _IOC_SIZEBITS = @as(c_int, 14);
-pub const _IOC_DIRBITS = @as(c_int, 2);
-pub const _IOC_NRMASK = (@as(c_int, 1) << _IOC_NRBITS) - @as(c_int, 1);
-pub const _IOC_TYPEMASK = (@as(c_int, 1) << _IOC_TYPEBITS) - @as(c_int, 1);
-pub const _IOC_SIZEMASK = (@as(c_int, 1) << _IOC_SIZEBITS) - @as(c_int, 1);
-pub const _IOC_DIRMASK = (@as(c_int, 1) << _IOC_DIRBITS) - @as(c_int, 1);
-pub const _IOC_NRSHIFT = @as(c_int, 0);
-pub const _IOC_TYPESHIFT = _IOC_NRSHIFT + _IOC_NRBITS;
-pub const _IOC_SIZESHIFT = _IOC_TYPESHIFT + _IOC_TYPEBITS;
-pub const _IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS;
-pub const _IOC_NONE = @as(c_uint, 0);
-pub const _IOC_WRITE = @as(c_uint, 1);
-pub const _IOC_READ = @as(c_uint, 2);
-pub inline fn _IOC(dir: anytype, @"type": anytype, nr: anytype, size: anytype) @TypeOf((((dir << _IOC_DIRSHIFT) | (@"type" << _IOC_TYPESHIFT)) | (nr << _IOC_NRSHIFT)) | (size << _IOC_SIZESHIFT)) {
-    _ = &dir;
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return (((dir << _IOC_DIRSHIFT) | (@"type" << _IOC_TYPESHIFT)) | (nr << _IOC_NRSHIFT)) | (size << _IOC_SIZESHIFT);
-}
-pub inline fn _IOC_TYPECHECK(t: anytype) @TypeOf(@import("std").zig.c_translation.sizeof(t)) {
-    _ = &t;
-    return @import("std").zig.c_translation.sizeof(t);
-}
-pub inline fn _IO(@"type": anytype, nr: anytype) @TypeOf(_IOC(_IOC_NONE, @"type", nr, @as(c_int, 0))) {
-    _ = &@"type";
-    _ = &nr;
-    return _IOC(_IOC_NONE, @"type", nr, @as(c_int, 0));
-}
-pub inline fn _IOR(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ, @"type", nr, _IOC_TYPECHECK(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_READ, @"type", nr, _IOC_TYPECHECK(size));
-}
-pub inline fn _IOW(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size));
-}
-pub inline fn _IOWR(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ | _IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_READ | _IOC_WRITE, @"type", nr, _IOC_TYPECHECK(size));
-}
-pub inline fn _IOR_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_READ, @"type", nr, @import("std").zig.c_translation.sizeof(size));
-}
-pub inline fn _IOW_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size));
-}
-pub inline fn _IOWR_BAD(@"type": anytype, nr: anytype, size: anytype) @TypeOf(_IOC(_IOC_READ | _IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size))) {
-    _ = &@"type";
-    _ = &nr;
-    _ = &size;
-    return _IOC(_IOC_READ | _IOC_WRITE, @"type", nr, @import("std").zig.c_translation.sizeof(size));
-}
-pub inline fn _IOC_DIR(nr: anytype) @TypeOf((nr >> _IOC_DIRSHIFT) & _IOC_DIRMASK) {
-    _ = &nr;
-    return (nr >> _IOC_DIRSHIFT) & _IOC_DIRMASK;
-}
-pub inline fn _IOC_TYPE(nr: anytype) @TypeOf((nr >> _IOC_TYPESHIFT) & _IOC_TYPEMASK) {
-    _ = &nr;
-    return (nr >> _IOC_TYPESHIFT) & _IOC_TYPEMASK;
-}
-pub inline fn _IOC_NR(nr: anytype) @TypeOf((nr >> _IOC_NRSHIFT) & _IOC_NRMASK) {
-    _ = &nr;
-    return (nr >> _IOC_NRSHIFT) & _IOC_NRMASK;
-}
-pub inline fn _IOC_SIZE(nr: anytype) @TypeOf((nr >> _IOC_SIZESHIFT) & _IOC_SIZEMASK) {
-    _ = &nr;
-    return (nr >> _IOC_SIZESHIFT) & _IOC_SIZEMASK;
-}
-pub const IOC_IN = _IOC_WRITE << _IOC_DIRSHIFT;
-pub const IOC_OUT = _IOC_READ << _IOC_DIRSHIFT;
-pub const IOC_INOUT = (_IOC_WRITE | _IOC_READ) << _IOC_DIRSHIFT;
-pub const IOCSIZE_MASK = _IOC_SIZEMASK << _IOC_SIZESHIFT;
-pub const IOCSIZE_SHIFT = _IOC_SIZESHIFT;
-pub const TCGETS = @as(c_int, 0x5401);
-pub const TCSETS = @as(c_int, 0x5402);
-pub const TCSETSW = @as(c_int, 0x5403);
-pub const TCSETSF = @as(c_int, 0x5404);
-pub const TCGETA = @as(c_int, 0x5405);
-pub const TCSETA = @as(c_int, 0x5406);
-pub const TCSETAW = @as(c_int, 0x5407);
-pub const TCSETAF = @as(c_int, 0x5408);
-pub const TCSBRK = @as(c_int, 0x5409);
-pub const TCXONC = @as(c_int, 0x540A);
-pub const TCFLSH = @as(c_int, 0x540B);
-pub const TIOCEXCL = @as(c_int, 0x540C);
-pub const TIOCNXCL = @as(c_int, 0x540D);
-pub const TIOCSCTTY = @as(c_int, 0x540E);
-pub const TIOCGPGRP = @as(c_int, 0x540F);
-pub const TIOCSPGRP = @as(c_int, 0x5410);
-pub const TIOCOUTQ = @as(c_int, 0x5411);
-pub const TIOCSTI = @as(c_int, 0x5412);
-pub const TIOCGWINSZ = @as(c_int, 0x5413);
-pub const TIOCSWINSZ = @as(c_int, 0x5414);
-pub const TIOCMGET = @as(c_int, 0x5415);
-pub const TIOCMBIS = @as(c_int, 0x5416);
-pub const TIOCMBIC = @as(c_int, 0x5417);
-pub const TIOCMSET = @as(c_int, 0x5418);
-pub const TIOCGSOFTCAR = @as(c_int, 0x5419);
-pub const TIOCSSOFTCAR = @as(c_int, 0x541A);
-pub const FIONREAD = @as(c_int, 0x541B);
-pub const TIOCINQ = FIONREAD;
-pub const TIOCLINUX = @as(c_int, 0x541C);
-pub const TIOCCONS = @as(c_int, 0x541D);
-pub const TIOCGSERIAL = @as(c_int, 0x541E);
-pub const TIOCSSERIAL = @as(c_int, 0x541F);
-pub const TIOCPKT = @as(c_int, 0x5420);
-pub const FIONBIO = @as(c_int, 0x5421);
-pub const TIOCNOTTY = @as(c_int, 0x5422);
-pub const TIOCSETD = @as(c_int, 0x5423);
-pub const TIOCGETD = @as(c_int, 0x5424);
-pub const TCSBRKP = @as(c_int, 0x5425);
-pub const TIOCSBRK = @as(c_int, 0x5427);
-pub const TIOCCBRK = @as(c_int, 0x5428);
-pub const TIOCGSID = @as(c_int, 0x5429);
-pub const TCGETS2 = @compileError("unable to translate macro: undefined identifier `termios2`");
-// /usr/include/asm-generic/ioctls.h:61:9
-pub const TCSETS2 = @compileError("unable to translate macro: undefined identifier `termios2`");
-// /usr/include/asm-generic/ioctls.h:62:9
-pub const TCSETSW2 = @compileError("unable to translate macro: undefined identifier `termios2`");
-// /usr/include/asm-generic/ioctls.h:63:9
-pub const TCSETSF2 = @compileError("unable to translate macro: undefined identifier `termios2`");
-// /usr/include/asm-generic/ioctls.h:64:9
-pub const TIOCGRS485 = @as(c_int, 0x542E);
-pub const TIOCSRS485 = @as(c_int, 0x542F);
-pub const TIOCGPTN = _IOR('T', @as(c_int, 0x30), c_uint);
-pub const TIOCSPTLCK = _IOW('T', @as(c_int, 0x31), c_int);
-pub const TIOCGDEV = _IOR('T', @as(c_int, 0x32), c_uint);
-pub const TCGETX = @as(c_int, 0x5432);
-pub const TCSETX = @as(c_int, 0x5433);
-pub const TCSETXF = @as(c_int, 0x5434);
-pub const TCSETXW = @as(c_int, 0x5435);
-pub const TIOCSIG = _IOW('T', @as(c_int, 0x36), c_int);
-pub const TIOCVHANGUP = @as(c_int, 0x5437);
-pub const TIOCGPKT = _IOR('T', @as(c_int, 0x38), c_int);
-pub const TIOCGPTLCK = _IOR('T', @as(c_int, 0x39), c_int);
-pub const TIOCGEXCL = _IOR('T', @as(c_int, 0x40), c_int);
-pub const TIOCGPTPEER = _IO('T', @as(c_int, 0x41));
-pub const TIOCGISO7816 = @compileError("unable to translate macro: undefined identifier `serial_iso7816`");
-// /usr/include/asm-generic/ioctls.h:82:9
-pub const TIOCSISO7816 = @compileError("unable to translate macro: undefined identifier `serial_iso7816`");
-// /usr/include/asm-generic/ioctls.h:83:9
-pub const FIONCLEX = @as(c_int, 0x5450);
-pub const FIOCLEX = @as(c_int, 0x5451);
-pub const FIOASYNC = @as(c_int, 0x5452);
-pub const TIOCSERCONFIG = @as(c_int, 0x5453);
-pub const TIOCSERGWILD = @as(c_int, 0x5454);
-pub const TIOCSERSWILD = @as(c_int, 0x5455);
-pub const TIOCGLCKTRMIOS = @as(c_int, 0x5456);
-pub const TIOCSLCKTRMIOS = @as(c_int, 0x5457);
-pub const TIOCSERGSTRUCT = @as(c_int, 0x5458);
-pub const TIOCSERGETLSR = @as(c_int, 0x5459);
-pub const TIOCSERGETMULTI = @as(c_int, 0x545A);
-pub const TIOCSERSETMULTI = @as(c_int, 0x545B);
-pub const TIOCMIWAIT = @as(c_int, 0x545C);
-pub const TIOCGICOUNT = @as(c_int, 0x545D);
-pub const FIOQSIZE = @as(c_int, 0x5460);
-pub const TIOCPKT_DATA = @as(c_int, 0);
-pub const TIOCPKT_FLUSHREAD = @as(c_int, 1);
-pub const TIOCPKT_FLUSHWRITE = @as(c_int, 2);
-pub const TIOCPKT_STOP = @as(c_int, 4);
-pub const TIOCPKT_START = @as(c_int, 8);
-pub const TIOCPKT_NOSTOP = @as(c_int, 16);
-pub const TIOCPKT_DOSTOP = @as(c_int, 32);
-pub const TIOCPKT_IOCTL = @as(c_int, 64);
-pub const SIOCADDRT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890B, .hex);
-pub const SIOCDELRT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890C, .hex);
-pub const SIOCRTMSG = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x890D, .hex);
-pub const SIOCGIFNAME = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8910, .hex);
-pub const SIOCSIFLINK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8911, .hex);
-pub const SIOCGIFCONF = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8912, .hex);
-pub const SIOCGIFFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8913, .hex);
-pub const SIOCSIFFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8914, .hex);
-pub const SIOCGIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8915, .hex);
-pub const SIOCSIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8916, .hex);
-pub const SIOCGIFDSTADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8917, .hex);
-pub const SIOCSIFDSTADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8918, .hex);
-pub const SIOCGIFBRDADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8919, .hex);
-pub const SIOCSIFBRDADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891a, .hex);
-pub const SIOCGIFNETMASK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891b, .hex);
-pub const SIOCSIFNETMASK = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891c, .hex);
-pub const SIOCGIFMETRIC = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891d, .hex);
-pub const SIOCSIFMETRIC = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891e, .hex);
-pub const SIOCGIFMEM = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x891f, .hex);
-pub const SIOCSIFMEM = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8920, .hex);
-pub const SIOCGIFMTU = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8921, .hex);
-pub const SIOCSIFMTU = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8922, .hex);
-pub const SIOCSIFNAME = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8923, .hex);
-pub const SIOCSIFHWADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8924, .hex);
-pub const SIOCGIFENCAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8925, .hex);
-pub const SIOCSIFENCAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8926, .hex);
-pub const SIOCGIFHWADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8927, .hex);
-pub const SIOCGIFSLAVE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8929, .hex);
-pub const SIOCSIFSLAVE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8930, .hex);
-pub const SIOCADDMULTI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8931, .hex);
-pub const SIOCDELMULTI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8932, .hex);
-pub const SIOCGIFINDEX = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8933, .hex);
-pub const SIOGIFINDEX = SIOCGIFINDEX;
-pub const SIOCSIFPFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8934, .hex);
-pub const SIOCGIFPFLAGS = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8935, .hex);
-pub const SIOCDIFADDR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8936, .hex);
-pub const SIOCSIFHWBROADCAST = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8937, .hex);
-pub const SIOCGIFCOUNT = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8938, .hex);
-pub const SIOCGIFBR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8940, .hex);
-pub const SIOCSIFBR = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8941, .hex);
-pub const SIOCGIFTXQLEN = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8942, .hex);
-pub const SIOCSIFTXQLEN = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8943, .hex);
-pub const SIOCDARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8953, .hex);
-pub const SIOCGARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8954, .hex);
-pub const SIOCSARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8955, .hex);
-pub const SIOCDRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8960, .hex);
-pub const SIOCGRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8961, .hex);
-pub const SIOCSRARP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8962, .hex);
-pub const SIOCGIFMAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8970, .hex);
-pub const SIOCSIFMAP = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8971, .hex);
-pub const SIOCADDDLCI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8980, .hex);
-pub const SIOCDELDLCI = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8981, .hex);
-pub const SIOCDEVPRIVATE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x89F0, .hex);
-pub const SIOCPROTOPRIVATE = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x89E0, .hex);
-pub const NCC = @as(c_int, 8);
-pub const TIOCM_LE = @as(c_int, 0x001);
-pub const TIOCM_DTR = @as(c_int, 0x002);
-pub const TIOCM_RTS = @as(c_int, 0x004);
-pub const TIOCM_ST = @as(c_int, 0x008);
-pub const TIOCM_SR = @as(c_int, 0x010);
-pub const TIOCM_CTS = @as(c_int, 0x020);
-pub const TIOCM_CAR = @as(c_int, 0x040);
-pub const TIOCM_RNG = @as(c_int, 0x080);
-pub const TIOCM_DSR = @as(c_int, 0x100);
-pub const TIOCM_CD = TIOCM_CAR;
-pub const TIOCM_RI = TIOCM_RNG;
-pub const N_TTY = @as(c_int, 0);
-pub const N_SLIP = @as(c_int, 1);
-pub const N_MOUSE = @as(c_int, 2);
-pub const N_PPP = @as(c_int, 3);
-pub const N_STRIP = @as(c_int, 4);
-pub const N_AX25 = @as(c_int, 5);
-pub const N_X25 = @as(c_int, 6);
-pub const N_6PACK = @as(c_int, 7);
-pub const N_MASC = @as(c_int, 8);
-pub const N_R3964 = @as(c_int, 9);
-pub const N_PROFIBUS_FDL = @as(c_int, 10);
-pub const N_IRDA = @as(c_int, 11);
-pub const N_SMSBLOCK = @as(c_int, 12);
-pub const N_HDLC = @as(c_int, 13);
-pub const N_SYNC_PPP = @as(c_int, 14);
-pub const N_HCI = @as(c_int, 15);
 pub const _UNISTD_H = @as(c_int, 1);
 pub const _POSIX_VERSION = @as(c_long, 200809);
 pub const __POSIX2_THIS_VERSION = @as(c_long, 200809);
@@ -2560,9 +2566,9 @@ pub const __ONCE_FLAG_INIT = @compileError("unable to translate C expr: unexpect
 pub const _BITS_SIGTHREAD_H = @as(c_int, 1);
 pub const SIGRTMIN = __libc_current_sigrtmin();
 pub const SIGRTMAX = __libc_current_sigrtmax();
-pub const termios = struct_termios;
 pub const winsize = struct_winsize;
 pub const termio = struct_termio;
+pub const termios = struct_termios;
 pub const timespec = struct_timespec;
 pub const sigval = union_sigval;
 pub const sigevent = struct_sigevent;

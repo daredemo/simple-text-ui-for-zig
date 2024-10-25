@@ -47,6 +47,11 @@ pub const TextLine = struct {
         };
     }
 
+    pub fn text_line(self: *TextLine, line: []const u8) *TextLine {
+        self.text = line;
+        return self;
+    }
+
     ///
     pub fn abs_x(self: *TextLine, x: u8) *TextLine {
         self.absolute_x = x;
@@ -84,18 +89,19 @@ pub const TextLine = struct {
         return self;
     }
 
-    pub fn draw(self: TextLine) !void {
+    pub fn draw(self: *TextLine) *TextLine {
         if ((self.absolute_x != null) and (self.absolute_y != null)) {
-            _ = try Term.cursor_to(self.absolute_x.?, self.absolute_y.?);
+            _ = Term.cursor_to(self.absolute_x.?, self.absolute_y.?) catch {};
         }
         if (self.col_md != null) {
-            _ = try Term.set_color_mbf(self.col_md.?, self.col_bg, self.col_fg);
+            _ = Term.set_color_mbf(self.col_md.?, self.col_bg, self.col_fg) catch {};
         } else {
-            _ = try Term.set_color_bf(self.col_bg, self.col_fg);
+            _ = Term.set_color_bf(self.col_bg, self.col_fg) catch {};
         }
         if (self.text != null) {
-            _ = try w_out.print("{s}", .{self.text.?});
+            _ = w_out.print("{s}", .{self.text.?}) catch {};
         }
-        _ = try Term.set_color_mbf(ColorM.Reset, ColorB.Default, ColorF.Default);
+        _ = Term.set_color_mbf(ColorM.Reset, ColorB.Default, ColorF.Default) catch {};
+        return self;
     }
 };

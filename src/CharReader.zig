@@ -1,4 +1,7 @@
 const std = @import("std");
+const kv = @import("KeyValue.zig");
+
+pub const KeyValue = kv.KeyValue;
 
 /// Reader for reading stdin char by char with optional ability to push back a char
 pub const CharReader = struct {
@@ -41,7 +44,7 @@ pub const CharReader = struct {
     }
 
     /// Clean the stream by removing chars from the stream
-    pub fn clean_stdin(self: CharReader) !void {
+    pub fn clean_stdin(self: *CharReader) !void {
         _ = self;
         var tmp_buffer: [1024]u8 = undefined;
         _ = try std.io.getStdIn().reader().readUntilDelimiterOrEof(&tmp_buffer, '\n');

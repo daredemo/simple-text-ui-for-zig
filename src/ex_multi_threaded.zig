@@ -2,9 +2,11 @@ const std = @import("std");
 
 const ChRead = @import("CharReader.zig");
 const Term = @import("ansi_terminal.zig");
+const TLine = @import("TextLine.zig");
 const ColorB = Term.ColorBackground;
 const ColorF = Term.ColorForeground;
 const ColorM = Term.ColorMode;
+const TextLine = TLine.TextLine;
 
 const write_out = std.io.getStdOut().writer();
 
@@ -45,8 +47,14 @@ pub fn main() !void {
     }
     _ = try Term.clear_screen();
     var the_app = TheApp.init("Threaded App", 20, 15);
-    _ = try write_out.print("Active program: {s}\n", .{the_app.name});
-    _ = try write_out.print("r -- run, p -- print, q -- quit\n", .{});
+    var tl_buffer: [512]u8 = undefined;
+    const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
+    var tl1 = TextLine.init(app_name);
+    _ = try tl1.abs_xy(0, 0).bg(ColorB.Blue).fg(ColorF.Black).draw();
+    // _ = try write_out.print("Active program: {s}\n", .{the_app.name});
+    var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
+    _ = try tl2.draw();
+    // _ = try write_out.print("r -- run, p -- print, q -- quit\n", .{});
     _ = try Term.set_color_b(ColorB.White);
     _ = try write_out.print("    \n", .{});
     _ = try write_out.print("    \n", .{});

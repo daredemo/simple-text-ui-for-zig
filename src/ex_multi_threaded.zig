@@ -205,7 +205,7 @@ const TheApp = struct {
                 const wsize = libdef.get_terminal_size();
                 const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{ wsize.ws_row, wsize.ws_col });
                 _ = tl_winsize.text_line(wsize_str).draw();
-                _ = try Term.erase_c_e_s();
+                _ = try Term.erase_c_e_l();
 
                 _ = try Term.set_color_f(ColorF.Default);
                 _ = try Term.cursor_to(6, 0);

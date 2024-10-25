@@ -15,6 +15,8 @@ pub fn build(b: *std.Build) !void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
+    const strip_debugging = (b.option(bool, "strip", "strip debugging symbols") orelse false);
+
     const lib = b.addStaticLibrary(.{
         .name = "terminal",
         // In this case the main source file is merely a path, however, in more
@@ -22,6 +24,7 @@ pub fn build(b: *std.Build) !void {
         .root_source_file = b.path("src/cTermio.zig"),
         .target = target,
         .optimize = optimize,
+        .strip = strip_debugging,
     });
 
     // This declares intent for the library to be installed into the standard
@@ -47,6 +50,7 @@ pub fn build(b: *std.Build) !void {
                 .root_source_file = b.path(ex),
                 .target = target,
                 .optimize = optimize,
+                .strip = strip_debugging,
             });
             examples.linkLibrary(lib);
             // examples.linkLibC();

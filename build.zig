@@ -41,6 +41,7 @@ pub fn build(b: *std.Build) !void {
     // });
 
     if (b.option(bool, "examples", "install examples") orelse false) {
+        // const example_files: [1][]const u8 = .{"src/ex_read_input_from_term.zig"};
         const example_files: [2][]const u8 = .{ "src/ex_read_input_from_term.zig", "src/ex_multi_threaded.zig" };
         for (example_files, 0..) |ex, index| {
             var ex_buffer: [512]u8 = undefined;

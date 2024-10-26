@@ -1,12 +1,23 @@
 const std = @import("std");
+const ColorDef = @import("Color.zig");
 
 const ChRead = @import("CharReader.zig");
 const Term = @import("ansi_terminal.zig");
 const TLine = @import("TextLine.zig");
 const libdef = @import("definitions.zig");
-const ColorB = Term.ColorBackground;
-const ColorF = Term.ColorForeground;
-const ColorM = Term.ColorMode;
+const RGB = ColorDef.RGB;
+const ColorB = ColorDef.ColorB;
+const ColorF = ColorDef.ColorF;
+const ColorBU = ColorDef.ColorBU;
+const ColorFU = ColorDef.ColorFU;
+const ColorMU = ColorDef.ColorMU;
+const ColorBE = ColorDef.ColorBE;
+const ColorFE = ColorDef.ColorFE;
+const ColorME = ColorDef.ColorME;
+const ColorStype = ColorDef.ColorStyle;
+// const ColorB = Term.ColorBackground;
+// const ColorF = Term.ColorForeground;
+// const ColorM = Term.ColorMode;
 const TextLine = TLine.TextLine;
 
 const write_out = std.io.getStdOut().writer();
@@ -45,25 +56,25 @@ pub fn main() !void {
         _ = Term.ensable_cursor() catch unreachable;
     }
     defer {
-        _ = Term.set_color_mbf(ColorM.Reset, null, null) catch unreachable;
+        _ = Term.set_color_mbf(ColorMU{ .Reset = {} }, null, null) catch unreachable;
     }
     _ = try Term.clear_screen();
     var the_app = TheApp.init("Threaded App", 20, 15);
     var tl_buffer: [512]u8 = undefined;
     const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
     var tl1 = TextLine.init(app_name);
-    _ = tl1.abs_xy(0, 0).bg(ColorB.Blue).fg(ColorF.Black).draw();
+    _ = tl1.abs_xy(0, 0).bg(ColorB.init_name(ColorBU{ .Blue = {} })).fg(ColorF.init_name(ColorFU{ .Black = {} })).draw();
     var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
     _ = tl2.draw();
     var tl3 = TextLine.init("    \n");
-    _ = tl3.bg(ColorB.White).draw().draw();
+    _ = tl3.bg(ColorB.init_name(ColorBU{ .White = {} })).draw().draw();
     _ = try Term.cursor_to(6, 0);
-    _ = try Term.set_color_b(ColorB.Reset);
+    _ = try Term.set_color_B(ColorB.init_name(ColorBU{ .Reset = {} }));
     var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
     defer thread_heartbeat.join();
     var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{&the_app});
     defer thread_inputs.join();
-    _ = try Term.set_color_b(ColorB.Reset);
+    _ = try Term.set_color_B(ColorB.init_name(ColorBU{ .Reset = {} }));
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
@@ -183,8 +194,8 @@ const TheApp = struct {
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
-        _ = tl_heart.fg(ColorF.Blue).abs_xy(5, 0); //.abs_x(5).abs_y(0);
-        _ = tl_winsize.fg(ColorF.Blue).abs_xy(5, 4); //.abs_x(5).abs_y(0);
+        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0); //.abs_x(5).abs_y(0);
+        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4); //.abs_x(5).abs_y(0);
         while (true) {
             {
                 self.mutex.lock();
@@ -207,7 +218,7 @@ const TheApp = struct {
                 _ = tl_winsize.text_line(wsize_str).draw();
                 _ = try Term.erase_c_e_l();
 
-                _ = try Term.set_color_f(ColorF.Default);
+                _ = try Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
                 _ = try Term.cursor_to(6, 0);
             }
         }

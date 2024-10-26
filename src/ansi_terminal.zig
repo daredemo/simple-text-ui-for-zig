@@ -1,69 +1,71 @@
 const std = @import("std");
+const ColorDef = @import("Color.zig");
+
 const write_out = std.io.getStdOut().writer();
 
-/// Foreground colors
-pub const ColorForeground = enum(u8) {
-    Reset = 0,
-    Black = 30,
-    Red = 31,
-    Green = 32,
-    Yellow = 33,
-    Blue = 34,
-    Magenta = 35,
-    Cyan = 36,
-    White = 37,
-    Default = 39,
-    BrightBlack = 90,
-    BrightRed = 91,
-    BrightGreen = 92,
-    BrightYellow = 93,
-    BrightBlue = 94,
-    BrightMagenta = 95,
-    BrightCyan = 96,
-    BrightWhite = 97,
-};
-
-/// Background colors
-pub const ColorBackground = enum(u8) {
-    Reset = 0,
-    Black = 40,
-    Red = 41,
-    Green = 42,
-    Yellow = 43,
-    Blue = 44,
-    Magenta = 45,
-    Cyan = 46,
-    White = 47,
-    Default = 49,
-    BrightBlack = 100,
-    BrightRed = 101,
-    BrightGreen = 102,
-    BrightYellow = 103,
-    BrightBlue = 104,
-    BrightMagenta = 105,
-    BrightCyan = 106,
-    BrightWhite = 107,
-};
-
-/// Color/Graphics modes
-pub const ColorMode = enum(u8) {
-    Reset = 0,
-    Bold = 1,
-    Dim = 2,
-    Italic = 3,
-    Underline = 4,
-    Blinking = 5,
-    Inverse = 7,
-    Hidden = 8,
-    Strikethrough = 9,
-    ResetBoldAndDim = 22,
-    ResetItalic = 23,
-    ResetUnderline = 24,
-    ResetBlinking = 25,
-    ResetInverse = 27,
-    ResetHidden = 28,
-    ResetStrikethrough = 29,
-};
+// /// Foreground colors
+// pub const ColorForeground = enum(u8) {
+//     Reset = 0,
+//     Black = 30,
+//     Red = 31,
+//     Green = 32,
+//     Yellow = 33,
+//     Blue = 34,
+//     Magenta = 35,
+//     Cyan = 36,
+//     White = 37,
+//     Default = 39,
+//     BrightBlack = 90,
+//     BrightRed = 91,
+//     BrightGreen = 92,
+//     BrightYellow = 93,
+//     BrightBlue = 94,
+//     BrightMagenta = 95,
+//     BrightCyan = 96,
+//     BrightWhite = 97,
+// };
+//
+// /// Background colors
+// pub const ColorBackground = enum(u8) {
+//     Reset = 0,
+//     Black = 40,
+//     Red = 41,
+//     Green = 42,
+//     Yellow = 43,
+//     Blue = 44,
+//     Magenta = 45,
+//     Cyan = 46,
+//     White = 47,
+//     Default = 49,
+//     BrightBlack = 100,
+//     BrightRed = 101,
+//     BrightGreen = 102,
+//     BrightYellow = 103,
+//     BrightBlue = 104,
+//     BrightMagenta = 105,
+//     BrightCyan = 106,
+//     BrightWhite = 107,
+// };
+//
+// /// Color/Graphics modes
+// pub const ColorMode = enum(u8) {
+//     Reset = 0,
+//     Bold = 1,
+//     Dim = 2,
+//     Italic = 3,
+//     Underline = 4,
+//     Blinking = 5,
+//     Inverse = 7,
+//     Hidden = 8,
+//     Strikethrough = 9,
+//     ResetBoldAndDim = 22,
+//     ResetItalic = 23,
+//     ResetUnderline = 24,
+//     ResetBlinking = 25,
+//     ResetInverse = 27,
+//     ResetHidden = 28,
+//     ResetStrikethrough = 29,
+// };
 
 /// Save current terminal state and activate an alternative screen
 pub fn save_terminal_state() !void {
@@ -181,6 +183,61 @@ pub fn cursor_column(n: ?u8) !void {
     _ = try write_out.print("\x1B[{d}G", .{N});
 }
 
+pub fn set_color_style(style: ColorDef.ColorStyle) !void {
+    const colorB = style.bg orelse ColorDef.ColorB.init_name(ColorDef.ColorBU{ .Default = {} });
+    const colorF = style.fg orelse ColorDef.ColorF.init_name(ColorDef.ColorFU{ .Default = {} });
+    if (style.md != null) {
+        const mode = style.md orelse ColorDef.ColorMU{ .Reset = {} };
+        _ = try set_color_MD(mode);
+    }
+    _ = try set_color_BF(colorB, colorF);
+}
+
+pub fn set_color_BF(colorB: ColorDef.ColorB, colorF: ColorDef.ColorF) !void {
+    _ = try set_color_B(colorB);
+    _ = try set_color_F(colorF);
+}
+
+pub fn set_color_F(color: ColorDef.ColorF) !void {
+    switch (color.type_data.tag()) {
+        0 => {
+            const name = color.name orelse ColorDef.ColorFU{ .Default = {} };
+            _ = try set_color_f(name);
+        },
+        1 => {
+            const v = color.value orelse 0;
+            _ = try set_color_fv(v);
+        },
+        2 => {
+            const rgb = color.rgb orelse ColorDef.RGB.init(0, 0, 0);
+            _ = try set_color_f_RGB(rgb.r, rgb.g, rgb.b);
+        },
+        else => {},
+    }
+}
+
+pub fn set_color_B(color: ColorDef.ColorB) !void {
+    switch (color.type_data.tag()) {
+        0 => {
+            const name = color.name orelse ColorDef.ColorBU{ .Default = {} };
+            _ = try set_color_b(name);
+        },
+        1 => {
+            const v = color.value orelse 0;
+            _ = try set_color_bv(v);
+        },
+        2 => {
+            const rgb = color.rgb orelse ColorDef.RGB.init(0, 0, 0);
+            _ = try set_color_b_RGB(rgb.r, rgb.g, rgb.b);
+        },
+        else => {},
+    }
+}
+
+pub fn set_color_MD(mode: ColorDef.ColorMU) !void {
+    _ = try write_out.print("\x1B[{d}m", .{mode.tag()});
+}
+
 /// Set foreground color of text by value
 pub fn set_color_fv(color: u8) !void {
     _ = try write_out.print("\x1B[38;5;{}m", .{color});
@@ -192,27 +249,27 @@ pub fn set_color_bv(color: u8) !void {
 }
 
 /// Set foreground color of text by name
-pub fn set_color_f(color: ColorForeground) !void {
-    _ = try write_out.print("\x1B[{}m", .{@intFromEnum(color)});
+pub fn set_color_f(color: ColorDef.ColorFU) !void {
+    _ = try write_out.print("\x1B[{}m", .{color.tag()});
 }
 
 /// Set background color of text by name
-pub fn set_color_b(color: ColorBackground) !void {
-    _ = try write_out.print("\x1B[{}m", .{@intFromEnum(color)});
+pub fn set_color_b(color: ColorDef.ColorBU) !void {
+    _ = try write_out.print("\x1B[{}m", .{color.tag()});
 }
 
 /// Set both background and foreground color of text by name
-pub fn set_color_bf(colorB: ?ColorBackground, colorF: ?ColorForeground) !void {
-    const B = colorB orelse ColorBackground.Default;
-    const F = colorF orelse ColorForeground.Default;
-    _ = try write_out.print("\x1B[{};{}m", .{ @intFromEnum(F), @intFromEnum(B) });
+pub fn set_color_bf(colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) !void {
+    const B = colorB orelse ColorDef.ColorBU{ .Default = {} }; // ColorBackground.Default;
+    const F = colorF orelse ColorDef.ColorFU{ .Default = {} };
+    _ = try write_out.print("\x1B[{};{}m", .{ F.tag(), B.tag() });
 }
 
 /// Set style of text using color mode, background and foreground by name
-pub fn set_color_mbf(colorM: ColorMode, colorB: ?ColorBackground, colorF: ?ColorForeground) !void {
-    const B = colorB orelse ColorBackground.Default;
-    const F = colorF orelse ColorForeground.Default;
-    _ = try write_out.print("\x1B[{};{};{}m", .{ @intFromEnum(colorM), @intFromEnum(F), @intFromEnum(B) });
+pub fn set_color_mbf(colorM: ColorDef.ColorMU, colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) !void {
+    const B = colorB orelse ColorDef.ColorBU{ .Default = {} };
+    const F = colorF orelse ColorDef.ColorFU{ .Default = {} };
+    _ = try write_out.print("\x1B[{};{};{}m", .{ colorM.tag(), F.tag(), B.tag() });
 }
 
 /// Set foreground color of text using RGB value

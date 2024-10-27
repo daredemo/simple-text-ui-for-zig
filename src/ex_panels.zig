@@ -1,6 +1,7 @@
 const std = @import("std");
 const ColorDef = @import("Color.zig");
 
+const PanelStruct = @import("Panel.zig");
 const ChRead = @import("CharReader.zig");
 const Term = @import("ansi_terminal.zig");
 const TLine = @import("TextLine.zig");
@@ -15,36 +16,15 @@ const ColorBE = ColorDef.ColorBE;
 const ColorFE = ColorDef.ColorFE;
 const ColorME = ColorDef.ColorME;
 const ColorStype = ColorDef.ColorStyle;
-// const ColorB = Term.ColorBackground;
-// const ColorF = Term.ColorForeground;
-// const ColorM = Term.ColorMode;
 const TextLine = TLine.TextLine;
+const Panel = PanelStruct.Panel;
+const Layout = PanelStruct.Layout;
 
 const write_out = std.io.getStdOut().writer();
-
-// Moved to "definitions.zig"
-// pub const tcflag_t = c_uint;
-// pub const speed_t = c_uint;
-// pub const cc_t = u8;
-// pub const struct_termios = extern struct {
-//     c_iflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_oflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_cflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_lflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_line: cc_t = @import("std").mem.zeroes(cc_t),
-//     c_cc: [32]cc_t = @import("std").mem.zeroes([32]cc_t),
-//     c_ispeed: speed_t = @import("std").mem.zeroes(speed_t),
-//     c_ospeed: speed_t = @import("std").mem.zeroes(speed_t),
-// };
-// pub extern fn set_signal() void;
-// pub extern fn save_terminal_settings() struct_termios;
-// pub extern fn restore_terminal_settings(arg_oldt: struct_termios) void;
-// pub extern fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) void;
 
 pub fn main() !void {
     libdef.handle_sigwinch(0);
     libdef.set_signal();
-    // libdef.setup_sigint();
     _ = try Term.save_terminal_state();
     defer {
         _ = Term.restore_terminal_state() catch unreachable;
@@ -61,7 +41,12 @@ pub fn main() !void {
         _ = Term.set_color_mbf(ColorMU{ .Reset = {} }, null, null) catch unreachable;
     }
     _ = try Term.clear_screen();
-    var the_app = TheApp.init("Threaded App", 20, 15);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    var allocator = gpa.allocator();
+    const root = try Panel.init_root(null, &libdef.win_width, &libdef.win_height, Layout.Vertical, &allocator);
+    defer _ = allocator.destroy(root);
+    var the_app = TheApp.init("Threaded App", root, 20, 15);
     var tl_buffer: [512]u8 = undefined;
     const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
     var tl1 = TextLine.init(app_name);
@@ -94,21 +79,23 @@ const TheApp = struct {
     heart_beat: bool,
     width: u8,
     height: u8,
+    root_panel: *Panel = undefined,
 
-    pub fn init(the_name: []const u8, width: u8, height: u8) TheApp {
+    pub fn init(the_name: []const u8, root_panel: *Panel, width: u8, height: u8) TheApp {
         return .{
             .name = the_name,
             .is_running = true,
             .heart_beat = false,
             .width = width,
             .height = height,
+            .root_panel = root_panel,
         };
     }
 
     pub fn get_inputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
         var tl_input = TextLine.init(" ");
-        _ = tl_input.abs_xy(6, 0);
+        _ = tl_input.abs_xy(7, 0);
         while (true) {
             {
                 self.mutex.lock();
@@ -116,7 +103,7 @@ const TheApp = struct {
                 if (!(self.is_running)) break;
             }
             const c = reader.getchar() catch unreachable;
-            _ = try Term.cursor_to(6, 0);
+            // _ = try Term.cursor_to(6, 0);
             const ch = if (c) |cc| cc else 0;
             switch (ch) {
                 'p' => {
@@ -198,14 +185,17 @@ const TheApp = struct {
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
+        var tl_panelinfo = TextLine.init("");
         _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0); //.abs_x(5).abs_y(0);
         _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4); //.abs_x(5).abs_y(0);
+        _ = tl_panelinfo.abs_xy(6, 0);
         while (true) {
             {
                 self.mutex.lock();
                 defer self.mutex.unlock();
                 if (!(self.is_running)) break;
             }
+            _ = self.root_panel.update();
             _ = std.time.sleep(std.time.ns_per_s / 10);
             defer counter = (counter + 1) % 10;
             if (counter == 0) {
@@ -228,8 +218,11 @@ const TheApp = struct {
                 _ = try Term.erase_c_e_l();
 
                 _ = try Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
-                _ = try Term.cursor_to(6, 0);
+                // _ = try Term.cursor_to(6, 0);
             }
+            const panelinfo_str = try std.fmt.bufPrint(&tl_buffer, "[[PANEL]] title: {any}; layout: {d}; W: {d:3}; H: {d:3}", .{ self.root_panel.title, @intFromEnum(self.root_panel.layout), self.root_panel.width, self.root_panel.height });
+            _ = tl_panelinfo.text_line(panelinfo_str).draw();
+            _ = try Term.erase_c_e_l();
         }
     }
 };

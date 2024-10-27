@@ -1019,7 +1019,7 @@ pub extern fn pthread_kill(__threadid: pthread_t, __signo: c_int) c_int;
 pub extern fn __libc_current_sigrtmin() c_int;
 pub extern fn __libc_current_sigrtmax() c_int;
 pub export var win_width: sig_atomic_t = 0;
-pub export var win_heidht: sig_atomic_t = 0;
+pub export var win_height: sig_atomic_t = 0;
 pub export fn handle_sigint(sig: c_int) void {
     _ = &sig;
 }
@@ -1029,7 +1029,7 @@ pub export fn handle_sigwinch(sig: c_int) void {
     _ = &w;
     if (ioctl(@as(c_int, 1), @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 21523)))), &w) == @as(c_int, 0)) {
         win_width = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_col)));
-        win_heidht = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_row)));
+        win_height = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_row)));
     }
 }
 pub export fn save_terminal_settings() struct_termios {

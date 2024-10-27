@@ -19,7 +19,7 @@ Currently the library works on Linux. It is not tested on MacOS, etc., but shoul
 |Disable CTRL-C|✅     |Allowing CTRL-C would prevent restorating of terminal state|
 |TextLine  |✅     |Basic stuff is done |
 |Colors    |⬜ WIP |Color/Graphics modes need more work |
-|Layouts   |⬜ WIP |Divide screen to vertical/horizontal blocks|
+|Panels    |⬜ WIP |Divide screen to vertical/horizontal panels|
 |Frames    |⬜ TODO|Framed layouts/boxes/popups|
 |Popups    |⬜ TODO| |
 |Buttons   |⬜ TODO| |

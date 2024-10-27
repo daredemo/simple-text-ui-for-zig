@@ -9,7 +9,7 @@
 // zig translate-c -static src/cTermio.c -lc > src/cTermio.zig
 
 volatile sig_atomic_t win_width = 0;
-volatile sig_atomic_t win_heidht = 0;
+volatile sig_atomic_t win_height = 0;
 
 // Handler to ignore signals
 // void signal_handler(int sig){}
@@ -19,7 +19,7 @@ void handle_sigwinch(const int sig) {
     struct winsize w;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0) {
         win_width = w.ws_col;
-        win_heidht = w.ws_row;
+        win_height = w.ws_row;
     }
 }
 

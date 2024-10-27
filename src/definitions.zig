@@ -24,7 +24,7 @@ pub extern fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) voi
 // pub extern fn get_terminal_size() struct_winsize;
 pub const sig_atomic_t = c_int;
 pub extern var win_width: sig_atomic_t;
-pub extern var win_heidht: sig_atomic_t;
+pub extern var win_height: sig_atomic_t;
 pub extern fn setup_sigint() void;
 pub extern fn setup_sigwinch() void;
 pub extern fn handle_sigwinch(sig: c_int) void;

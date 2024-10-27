@@ -1018,9 +1018,19 @@ pub extern fn pthread_sigmask(__how: c_int, noalias __newmask: [*c]const __sigse
 pub extern fn pthread_kill(__threadid: pthread_t, __signo: c_int) c_int;
 pub extern fn __libc_current_sigrtmin() c_int;
 pub extern fn __libc_current_sigrtmax() c_int;
-pub export fn signal_handler(arg_sig: c_int) void {
-    var sig = arg_sig;
+pub export var win_width: sig_atomic_t = 0;
+pub export var win_heidht: sig_atomic_t = 0;
+pub export fn handle_sigint(sig: c_int) void {
     _ = &sig;
+}
+pub export fn handle_sigwinch(sig: c_int) void {
+    _ = &sig;
+    var w: struct_winsize = undefined;
+    _ = &w;
+    if (ioctl(@as(c_int, 1), @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 21523)))), &w) == @as(c_int, 0)) {
+        win_width = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_col)));
+        win_heidht = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_row)));
+    }
 }
 pub export fn save_terminal_settings() struct_termios {
     var oldt: struct_termios = undefined;
@@ -1040,13 +1050,8 @@ pub export fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) voi
     _ = tcsetattr(@as(c_int, 0), @as(c_int, 0), state);
 }
 pub export fn set_signal() void {
-    _ = signal(@as(c_int, 2), &signal_handler);
-}
-pub export fn get_terminal_size() struct_winsize {
-    var w: struct_winsize = undefined;
-    _ = &w;
-    _ = ioctl(@as(c_int, 1), @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 21523)))), &w);
-    return w;
+    _ = signal(@as(c_int, 2), &handle_sigint);
+    _ = signal(@as(c_int, 28), &handle_sigwinch);
 }
 pub const __llvm__ = @as(c_int, 1);
 pub const __clang__ = @as(c_int, 1);

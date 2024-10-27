@@ -42,7 +42,9 @@ const write_out = std.io.getStdOut().writer();
 // pub extern fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) void;
 
 pub fn main() !void {
+    libdef.handle_sigwinch(0);
     libdef.set_signal();
+    // libdef.setup_sigint();
     _ = try Term.save_terminal_state();
     defer {
         _ = Term.restore_terminal_state() catch unreachable;
@@ -190,6 +192,8 @@ const TheApp = struct {
     }
 
     pub fn get_heart_beat(self: *TheApp) !void {
+        const w_width: *i32 = &libdef.win_width;
+        const w_height: *i32 = &libdef.win_heidht;
         var counter: u8 = 0;
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
@@ -213,8 +217,13 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.text_line(" ").draw();
                 }
-                const wsize = libdef.get_terminal_size();
-                const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{ wsize.ws_row, wsize.ws_col });
+                // const wsize = libdef.get_terminal_size();
+                const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{
+                    // wsize.ws_col,
+                    w_width.*,
+                    // wsize.ws_row,
+                    w_height.*,
+                });
                 _ = tl_winsize.text_line(wsize_str).draw();
                 _ = try Term.erase_c_e_l();
 

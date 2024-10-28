@@ -16,7 +16,7 @@ Currently the library works on Linux. It is not tested on MacOS, etc., but shoul
 |Restore terminal|✅     | |
 |Non-blocking key capture|✅     |Keys are read without the need to press ENTER|
 |Disable echo of user input|✅     | |
-|Disable CTRL-C|✅     |Allowing CTRL-C would prevent restorating of terminal state|
+|Disable CTRL-C|✅     |Allowing CTRL-C would prevent restoration of terminal state|
 |TextLine  |✅     |Basic stuff is done |
 |Colors    |⬜ WIP |Color/Graphics modes need more work |
 |Panels    |⬜ WIP |Divide screen to vertical/horizontal panels|

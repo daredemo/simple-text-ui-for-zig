@@ -68,6 +68,12 @@ pub const Panel = struct {
         if (self.parent == null) {
             self.width = self.parent_width.*;
             self.height = self.parent_height.*;
+        } else {
+            if (self.layout == Layout.Vertical) {
+                self.width = self.parent.?.width;
+            } else {
+                self.height = self.parent.?.height;
+            }
         }
         if (self.sibling_next != null) {
             _ = self.sibling_next.?.update();

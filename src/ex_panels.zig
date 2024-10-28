@@ -103,7 +103,6 @@ const TheApp = struct {
                 if (!(self.is_running)) break;
             }
             const c = reader.getchar();
-            // _ = Term.cursor_to(6, 0);
             const ch = if (c) |cc| cc else 0;
             switch (ch) {
                 'p' => {
@@ -175,7 +174,6 @@ const TheApp = struct {
                 else => {},
             }
         }
-        // _ = reader.clean_stdin();
     }
 
     pub fn get_heart_beat(self: *TheApp) !void {
@@ -186,8 +184,8 @@ const TheApp = struct {
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
         var tl_panelinfo = TextLine.init("");
-        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0); //.abs_x(5).abs_y(0);
-        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4); //.abs_x(5).abs_y(0);
+        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0);
+        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4);
         _ = tl_panelinfo.abs_xy(6, 0);
         while (true) {
             {
@@ -207,18 +205,14 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.text_line(" ").draw();
                 }
-                // const wsize = libdef.get_terminal_size();
                 const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{
-                    // wsize.ws_col,
                     w_width.*,
-                    // wsize.ws_row,
                     w_height.*,
                 });
                 _ = tl_winsize.text_line(wsize_str).draw();
                 _ = Term.erase_c_e_l();
 
                 _ = Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
-                // _ = Term.cursor_to(6, 0);
             }
             const panelinfo_str = try std.fmt.bufPrint(&tl_buffer, "[[PANEL]] title: {any}; layout: {d}; W: {d:3}; H: {d:3}", .{ self.root_panel.title, @intFromEnum(self.root_panel.layout), self.root_panel.width, self.root_panel.height });
             _ = tl_panelinfo.text_line(panelinfo_str).draw();

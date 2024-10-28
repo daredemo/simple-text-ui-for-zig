@@ -3,70 +3,6 @@ const ColorDef = @import("Color.zig");
 
 const write_out = std.io.getStdOut().writer();
 
-// /// Foreground colors
-// pub const ColorForeground = enum(u8) {
-//     Reset = 0,
-//     Black = 30,
-//     Red = 31,
-//     Green = 32,
-//     Yellow = 33,
-//     Blue = 34,
-//     Magenta = 35,
-//     Cyan = 36,
-//     White = 37,
-//     Default = 39,
-//     BrightBlack = 90,
-//     BrightRed = 91,
-//     BrightGreen = 92,
-//     BrightYellow = 93,
-//     BrightBlue = 94,
-//     BrightMagenta = 95,
-//     BrightCyan = 96,
-//     BrightWhite = 97,
-// };
-//
-// /// Background colors
-// pub const ColorBackground = enum(u8) {
-//     Reset = 0,
-//     Black = 40,
-//     Red = 41,
-//     Green = 42,
-//     Yellow = 43,
-//     Blue = 44,
-//     Magenta = 45,
-//     Cyan = 46,
-//     White = 47,
-//     Default = 49,
-//     BrightBlack = 100,
-//     BrightRed = 101,
-//     BrightGreen = 102,
-//     BrightYellow = 103,
-//     BrightBlue = 104,
-//     BrightMagenta = 105,
-//     BrightCyan = 106,
-//     BrightWhite = 107,
-// };
-//
-// /// Color/Graphics modes
-// pub const ColorMode = enum(u8) {
-//     Reset = 0,
-//     Bold = 1,
-//     Dim = 2,
-//     Italic = 3,
-//     Underline = 4,
-//     Blinking = 5,
-//     Inverse = 7,
-//     Hidden = 8,
-//     Strikethrough = 9,
-//     ResetBoldAndDim = 22,
-//     ResetItalic = 23,
-//     ResetUnderline = 24,
-//     ResetBlinking = 25,
-//     ResetInverse = 27,
-//     ResetHidden = 28,
-//     ResetStrikethrough = 29,
-// };
-
 /// Save current terminal state and activate an alternative screen
 pub fn save_terminal_state() void {
     _ = write_out.print("\x1B[?1049h", .{}) catch unreachable;
@@ -125,11 +61,9 @@ pub fn erase_l() void {
 /// Clear screen and move cursor to "home"
 pub fn clear_screen() void {
     // clear screen
-    // _ =  write_out.print("\x1B[2J", .{});
     _ = erase_s();
     // move cursor to "home" position
     _ = cursor_home();
-    // _ =  write_out.print("\x1B[H", .{});
 }
 
 pub fn cursor_home() void {

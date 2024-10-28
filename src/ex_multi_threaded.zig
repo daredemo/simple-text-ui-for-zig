@@ -15,36 +15,13 @@ const ColorBE = ColorDef.ColorBE;
 const ColorFE = ColorDef.ColorFE;
 const ColorME = ColorDef.ColorME;
 const ColorStype = ColorDef.ColorStyle;
-// const ColorB = Term.ColorBackground;
-// const ColorF = Term.ColorForeground;
-// const ColorM = Term.ColorMode;
 const TextLine = TLine.TextLine;
 
 const write_out = std.io.getStdOut().writer();
 
-// Moved to "definitions.zig"
-// pub const tcflag_t = c_uint;
-// pub const speed_t = c_uint;
-// pub const cc_t = u8;
-// pub const struct_termios = extern struct {
-//     c_iflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_oflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_cflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_lflag: tcflag_t = @import("std").mem.zeroes(tcflag_t),
-//     c_line: cc_t = @import("std").mem.zeroes(cc_t),
-//     c_cc: [32]cc_t = @import("std").mem.zeroes([32]cc_t),
-//     c_ispeed: speed_t = @import("std").mem.zeroes(speed_t),
-//     c_ospeed: speed_t = @import("std").mem.zeroes(speed_t),
-// };
-// pub extern fn set_signal() void;
-// pub extern fn save_terminal_settings() struct_termios;
-// pub extern fn restore_terminal_settings(arg_oldt: struct_termios) void;
-// pub extern fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) void;
-
 pub fn main() !void {
     libdef.handle_sigwinch(0);
     libdef.set_signal();
-    // libdef.setup_sigint();
     _ = Term.save_terminal_state();
     defer {
         _ = Term.restore_terminal_state();
@@ -188,7 +165,6 @@ const TheApp = struct {
                 else => {},
             }
         }
-        // _ = reader.clean_stdin();
     }
 
     pub fn get_heart_beat(self: *TheApp) !void {
@@ -198,8 +174,8 @@ const TheApp = struct {
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
-        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0); //.abs_x(5).abs_y(0);
-        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4); //.abs_x(5).abs_y(0);
+        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0);
+        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4);
         while (true) {
             {
                 self.mutex.lock();
@@ -217,11 +193,8 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.text_line(" ").draw();
                 }
-                // const wsize = libdef.get_terminal_size();
                 const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{
-                    // wsize.ws_col,
                     w_width.*,
-                    // wsize.ws_row,
                     w_height.*,
                 });
                 _ = tl_winsize.text_line(wsize_str).draw();

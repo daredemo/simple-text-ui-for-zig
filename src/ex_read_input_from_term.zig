@@ -3,9 +3,6 @@ const Term = @import("ansi_terminal.zig");
 const CharReader = @import("CharReader.zig");
 const ColorDef = @import("Color.zig");
 
-// const ColorB = Term.ColorBackground;
-// const ColorF = Term.ColorForeground;
-// const ColorM = Term.ColorMode;
 const RGB = ColorDef.RGB;
 const ColorB = ColorDef.ColorB;
 const ColorF = ColorDef.ColorF;
@@ -61,17 +58,14 @@ pub fn main() !void {
     const f_blue = ColorF.init_name(ColorFU{ .Blue = {} });
     const b_brightwhite = ColorB.init_name(ColorBU{ .BrightWhite = {} });
     _ = Term.set_color_b_RGB(255, null, null);
-    // _ = Term.set_color_f_RGB(null, null, null);
     _ = Term.set_color_F(f_black);
     _ = try write_out.print("TOP LEVEL TITLE", .{});
     _ = Term.cursor_to(2, 0);
     _ = Term.set_color_BF(b_brightwhite, f_blue);
-    // _ = Term.set_color_bf(ColorB.BrightWhite, ColorF.Blue);
     _ = try write_out.print("The second level title", .{});
     _ = Term.cursor_to(3, 0);
     const dim_white_blue = ColorStyle.init(b_brightwhite, f_blue, ColorMU{ .Dim = {} });
     _ = Term.set_color_style(dim_white_blue);
-    // _ = Term.set_color_mbf(ColorMU{ .Dim = {} }, ColorBU{ .White = {} }, ColorFU{ .Blue = {} });
     _ = try write_out.print("A dim second level title", .{});
     _ = Term.set_color_MD(ColorMU{ .Reset = {} });
     _ = Term.cursor_down_b(null);

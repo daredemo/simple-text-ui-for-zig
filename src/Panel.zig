@@ -19,8 +19,8 @@ pub const Panel = struct {
     size_relative: ?f32 = undefined,
     allocator: *std.mem.Allocator = undefined,
 
-    pub fn init(title: ?[]u8, parent: *Panel, layout: Layout, allocator: *std.mem.Allocator) !*Panel {
-        const panel = try allocator.create(Panel);
+    pub fn init(title: ?[]u8, parent: *Panel, layout: Layout, allocator: *std.mem.Allocator) *Panel {
+        const panel = allocator.create(Panel) catch unreachable;
         panel.* = Panel{
             .title = title,
             .parent = parent,
@@ -43,8 +43,8 @@ pub const Panel = struct {
         return panel;
     }
 
-    pub fn init_root(title: ?[]u8, parent_w: *i32, parent_h: *i32, layout: Layout, allocator: *std.mem.Allocator) !*Panel {
-        const panel = try allocator.create(Panel);
+    pub fn init_root(title: ?[]u8, parent_w: *i32, parent_h: *i32, layout: Layout, allocator: *std.mem.Allocator) *Panel {
+        const panel = allocator.create(Panel) catch unreachable;
         panel.* = Panel{
             .title = title,
             .parent = null,

@@ -206,19 +206,19 @@ pub const TextLine = struct {
         const m_reset = ColorMU{ .Reset = {} };
         const style = self.color orelse ColorStyle.init(b_default, f_default, null);
         if ((self.absolute_x != null) and (self.absolute_y != null)) {
-            _ = Term.cursor_to(self.absolute_x.?, self.absolute_y.?) catch {};
+            _ = Term.cursor_to(self.absolute_x.?, self.absolute_y.?);
         }
         // if ((style.md != null) and (style.bg.tag() == 0) and (style.fg.tag() == 0)) {
-        //     _ = Term.set_color_mbf(style.md.?, style.bg.name, style.fg.name) catch {};
+        //     _ = Term.set_color_mbf(style.md.?, style.bg.name, style.fg.name);
         // } else
         {
             // const bf_col = self.color orelse ColorStyle.init(b_default, f_default, null);
-            _ = Term.set_color_BF(style.bg.?, style.fg.?) catch {};
+            _ = Term.set_color_BF(style.bg.?, style.fg.?);
         }
         if (self.text != null) {
-            _ = w_out.print("{s}", .{self.text.?}) catch {};
+            _ = w_out.print("{s}", .{self.text.?}) catch unreachable;
         }
-        _ = Term.set_color_mbf(m_reset, bu_default, fu_default) catch {};
+        _ = Term.set_color_mbf(m_reset, bu_default, fu_default);
         return self;
     }
 };

@@ -1,7 +1,7 @@
 const std = @import("std");
-const kv = @import("KeyValue.zig");
+// const kv = @import("KeyValue.zig");
 
-pub const KeyValue = kv.KeyValue;
+// pub const KeyValue = kv.KeyValue;
 
 /// Reader for reading stdin char by char with optional ability to push back a char
 pub const CharReader = struct {

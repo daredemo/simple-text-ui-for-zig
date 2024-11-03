@@ -71,48 +71,48 @@ pub fn cursor_home() void {
 }
 
 /// Move cursor to a given location
-pub fn cursor_to(line: u8, column: u8) void {
+pub fn cursor_to(line: u32, column: u32) void {
     _ = write_out.print("\x1B[{d};{d}H", .{ line, column }) catch unreachable;
 }
 
 /// Move cursor up n lines
-pub fn cursor_up(n: ?u8) void {
+pub fn cursor_up(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}A", .{N}) catch unreachable;
 }
 
 /// Move cursor down n lines
-pub fn cursor_down(n: ?u8) void {
+pub fn cursor_down(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}B", .{N}) catch unreachable;
 }
 
 /// Move cursor right n columns
-pub fn cursor_right(n: ?u8) void {
+pub fn cursor_right(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}C", .{N}) catch unreachable;
 }
 
 /// Move cursor left n columns
-pub fn cursor_left(n: ?u8) void {
+pub fn cursor_left(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}D", .{N}) catch unreachable;
 }
 
 /// Move cursor to beginning of next line, n lines down
-pub fn cursor_down_b(n: ?u8) void {
+pub fn cursor_down_b(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}E", .{N}) catch unreachable;
 }
 
 /// Move cursor to beginning of next line, n lines up
-pub fn cursor_up_b(n: ?u8) void {
+pub fn cursor_up_b(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}F", .{N}) catch unreachable;
 }
 
 /// Move cursor to column n
-pub fn cursor_column(n: ?u8) void {
+pub fn cursor_column(n: ?u32) void {
     const N = n orelse 1;
     _ = write_out.print("\x1B[{d}G", .{N}) catch unreachable;
 }

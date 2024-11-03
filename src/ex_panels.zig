@@ -1,24 +1,29 @@
 const std = @import("std");
-const ColorDef = @import("Color.zig");
 
-const PanelStruct = @import("Panel.zig");
 const ChRead = @import("CharReader.zig");
 const Term = @import("ansi_terminal.zig");
-const TLine = @import("TextLine.zig");
+// const TLine = @import("TextLine.zig");
 const libdef = @import("definitions.zig");
-const RGB = ColorDef.RGB;
-const ColorB = ColorDef.ColorB;
-const ColorF = ColorDef.ColorF;
-const ColorBU = ColorDef.ColorBU;
-const ColorFU = ColorDef.ColorFU;
-const ColorMU = ColorDef.ColorMU;
-const ColorBE = ColorDef.ColorBE;
-const ColorFE = ColorDef.ColorFE;
-const ColorME = ColorDef.ColorME;
-const ColorStype = ColorDef.ColorStyle;
-const TextLine = TLine.TextLine;
-const Panel = PanelStruct.Panel;
-const Layout = PanelStruct.Layout;
+const string_stuff = @import("StringStuff.zig");
+const Border = @import("Border.zig");
+const RGB = @import("Color.zig").RGB;
+const ColorB = @import("Color.zig").ColorB;
+const ColorF = @import("Color.zig").ColorF;
+const ColorBU = @import("Color.zig").ColorBU;
+const ColorFU = @import("Color.zig").ColorFU;
+const ColorMU = @import("Color.zig").ColorMU;
+const ColorBE = @import("Color.zig").ColorBE;
+const ColorFE = @import("Color.zig").ColorFE;
+const ColorME = @import("Color.zig").ColorME;
+const ColorStype = @import("Color.zig").ColorStyle;
+const TextLine = @import("TextLine.zig").TextLine;
+const Panel = @import("Panel.zig").Panel;
+const Layout = @import("Panel.zig").Layout;
+const RenderText = @import("Panel.zig").RenderText;
+const TitlePosition = @import("Panel.zig").PositionTB;
+const StrAE = string_stuff.AlignmentE;
+const StrAU = string_stuff.Alignment;
+const string_align = string_stuff.string_align;
 
 const write_out = std.io.getStdOut().writer();
 
@@ -44,19 +49,31 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     var allocator = gpa.allocator();
-    const root = Panel.init_root(null, &libdef.win_width, &libdef.win_height, Layout.Vertical, &allocator);
-    defer _ = allocator.destroy(root);
-    var the_app = TheApp.init("Threaded App", root, 20, 15);
-    var tl_buffer: [512]u8 = undefined;
-    const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
-    var tl1 = TextLine.init(app_name);
-    _ = tl1.abs_xy(0, 0).bg(ColorB.init_name(ColorBU{ .Blue = {} })).fg(ColorF.init_name(ColorFU{ .Black = {} })).draw();
-    var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
-    _ = tl2.draw();
-    var tl3 = TextLine.init("    \n");
-    _ = tl3.bg(ColorB.init_name(ColorBU{ .White = {} })).draw().draw();
-    _ = Term.cursor_to(6, 0);
-    _ = Term.set_color_B(ColorB.init_name(ColorBU{ .Reset = {} }));
+    // PANEL: ROOT
+    const panel_root = Panel.init_root("FULL", &libdef.win_width, &libdef.win_height, Layout.Horizontal, &allocator).set_border(null);
+    defer _ = allocator.destroy(panel_root);
+    defer _ = panel_root.deinit(&allocator);
+    // PANEL: MAIN
+    const panel_main = Panel.init("INFO", panel_root, Layout.Vertical, &allocator);
+    defer _ = allocator.destroy(panel_main);
+    defer _ = panel_main.deinit(&allocator);
+    const border_1 = Border.Border.init(&allocator).set_border_style(Border.BorderStyle{ .LightRound = {} });
+    defer _ = allocator.destroy(border_1);
+    _ = panel_main.set_border(border_1.*).title_location(StrAU{ .Center = {} }, TitlePosition{ .Top = {} });
+    // PANEL: VOID LEFT OF MAIN
+    const panel_main_void_l = Panel.init("VOID L", panel_root, Layout.Vertical, &allocator);
+    defer _ = allocator.destroy(panel_main_void_l);
+    defer panel_main_void_l.deinit(&allocator);
+    // PANEL: VOID RIGHT OF MAIN
+    const panel_main_void_r = Panel.init("VOID R", panel_root, Layout.Vertical, &allocator);
+    defer _ = allocator.destroy(panel_main_void_r);
+    defer panel_main_void_r.deinit(&allocator);
+    _ = panel_main_void_l.set_border(border_1.*).title_location(StrAU{ .Left = {} }, TitlePosition{ .Bottom = {} });
+    _ = panel_main_void_r.set_border(border_1.*).title_location(StrAU{ .Right = {} }, TitlePosition{ .Bottom = {} });
+    _ = panel_root.append_child(panel_main_void_l, null, 1.0);
+    _ = panel_root.append_child(panel_main, 30, null);
+    _ = panel_root.append_child(panel_main_void_r, null, 1.0);
+    var the_app = TheApp.init("Threaded App", panel_root, 20, 15);
     var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
     defer thread_heartbeat.join();
     var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{&the_app});
@@ -94,8 +111,8 @@ const TheApp = struct {
 
     pub fn get_inputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
-        var tl_input = TextLine.init(" ");
-        _ = tl_input.abs_xy(7, 0);
+        // var tl_input = TextLine.init(" ");
+        // _ = tl_input.abs_xy(0, 8);
         while (true) {
             {
                 self.mutex.lock();
@@ -106,24 +123,24 @@ const TheApp = struct {
             const ch = if (c) |cc| cc else 0;
             switch (ch) {
                 'p' => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line("Printing...").draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line("Printing...").draw();
                 },
                 'r' => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line("Running...").draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line("Running...").draw();
                 },
                 9 => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line("TAB").draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line("TAB").draw();
                 },
                 10 => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line("ENTER").draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line("ENTER").draw();
                 },
                 32 => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line("SPACE").draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line("SPACE").draw();
                 },
                 'q' => {
                     _ = Term.erase_c_e_s();
@@ -133,12 +150,12 @@ const TheApp = struct {
                     break;
                 },
                 33...111 => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
+                    //     _ = Term.erase_c_e_s();
+                    //     _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
                 },
                 115...126 => {
-                    _ = Term.erase_c_e_s();
-                    _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
+                    // _ = Term.erase_c_e_s();
+                    // _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
                 },
                 27 => {
                     const ch1 = reader.getchar();
@@ -148,27 +165,27 @@ const TheApp = struct {
                         const chb = if (ch2) |cc| cc else 0;
                         switch (chb) {
                             'A' => {
-                                _ = Term.erase_c_e_s();
-                                _ = tl_input.text_line("Arrow UP").draw();
+                                // _ = Term.erase_c_e_s();
+                                // _ = tl_input.text_line("Arrow UP").draw();
                             },
                             'B' => {
-                                _ = Term.erase_c_e_s();
-                                _ = tl_input.text_line("Arrow DOWN").draw();
+                                // _ = Term.erase_c_e_s();
+                                // _ = tl_input.text_line("Arrow DOWN").draw();
                             },
                             'C' => {
-                                _ = Term.erase_c_e_s();
-                                _ = tl_input.text_line("Arrow RIGHT").draw();
+                                // _ = Term.erase_c_e_s();
+                                // _ = tl_input.text_line("Arrow RIGHT").draw();
                             },
                             'D' => {
-                                _ = Term.erase_c_e_s();
-                                _ = tl_input.text_line("Arrow LEFT").draw();
+                                // _ = Term.erase_c_e_s();
+                                // _ = tl_input.text_line("Arrow LEFT").draw();
                             },
                             else => {},
                         }
                     } else {
                         _ = reader.ungetc_last();
-                        _ = Term.erase_c_e_s();
-                        _ = tl_input.text_line("ESCAPE").draw();
+                        // _ = Term.erase_c_e_s();
+                        // _ = tl_input.text_line("ESCAPE").draw();
                     }
                 },
                 else => {},
@@ -177,16 +194,20 @@ const TheApp = struct {
     }
 
     pub fn get_heart_beat(self: *TheApp) !void {
-        const w_width: *i32 = &libdef.win_width;
-        const w_height: *i32 = &libdef.win_height;
         var counter: u8 = 0;
         var tl_heart = TextLine.init("♥");
-        var tl_buffer: [512]u8 = undefined;
-        var tl_winsize = TextLine.init("");
-        var tl_panelinfo = TextLine.init("");
-        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0);
-        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4);
-        _ = tl_panelinfo.abs_xy(6, 0);
+        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })); //.abs_xy(0, 5);
+        var tl_panelinfo = TextLine.init("q -- quit/exit");
+        _ = tl_panelinfo.relative_xy(2, 2);
+        const child_head = self.root_panel.child_head.?;
+        const child_2 = child_head.sibling_next.?;
+        _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y)).relative_xy(2, 1);
+        _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+        var rt1 = RenderText{ .parent = child_2, .text = &tl_heart, .next_text = null };
+        _ = child_2.append_text(&rt1);
+        var rt2 = RenderText{ .parent = null, .text = &tl_panelinfo, .next_text = null };
+        _ = child_2.append_text(&rt2);
+        _ = self.root_panel.draw();
         while (true) {
             {
                 self.mutex.lock();
@@ -201,22 +222,16 @@ const TheApp = struct {
                 self.mutex.lock();
                 defer self.mutex.unlock();
                 if (self.heart_beat) {
-                    _ = tl_heart.text_line("♥").draw();
+                    _ = tl_heart.text_line("♥");
                 } else {
-                    _ = tl_heart.text_line(" ").draw();
+                    _ = tl_heart.text_line(" ");
                 }
-                const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{
-                    w_width.*,
-                    w_height.*,
-                });
-                _ = tl_winsize.text_line(wsize_str).draw();
-                _ = Term.erase_c_e_l();
-
                 _ = Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
             }
-            const panelinfo_str = try std.fmt.bufPrint(&tl_buffer, "[[PANEL]] title: {any}; layout: {d}; W: {d:3}; H: {d:3}", .{ self.root_panel.title, @intFromEnum(self.root_panel.layout), self.root_panel.width, self.root_panel.height });
-            _ = tl_panelinfo.text_line(panelinfo_str).draw();
-            _ = Term.erase_c_e_l();
+            _ = self.root_panel.update();
+            _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            _ = self.root_panel.draw();
         }
     }
 };

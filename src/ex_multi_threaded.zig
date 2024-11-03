@@ -42,11 +42,13 @@ pub fn main() !void {
     var tl_buffer: [512]u8 = undefined;
     const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
     var tl1 = TextLine.init(app_name);
-    _ = tl1.abs_xy(0, 0).bg(ColorB.init_name(ColorBU{ .Blue = {} })).fg(ColorF.init_name(ColorFU{ .Black = {} })).draw();
+    _ = tl1.abs_xy(0, 1).bg(ColorB.init_name(ColorBU{ .Blue = {} })).fg(ColorF.init_name(ColorFU{ .Black = {} })).draw();
     var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
-    _ = tl2.draw();
+    _ = tl2.abs_xy(0, 2).draw();
     var tl3 = TextLine.init("    \n");
-    _ = tl3.bg(ColorB.init_name(ColorBU{ .White = {} })).draw().draw();
+    _ = tl3.bg(ColorB.init_name(ColorBU{ .White = {} }));
+    _ = tl3.abs_xy(0, 3).draw();
+    _ = tl3.abs_xy(0, 4).draw();
     _ = Term.cursor_to(6, 0);
     _ = Term.set_color_B(ColorB.init_name(ColorBU{ .Reset = {} }));
     var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
@@ -85,7 +87,7 @@ const TheApp = struct {
     pub fn get_inputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
         var tl_input = TextLine.init(" ");
-        _ = tl_input.abs_xy(6, 0);
+        _ = tl_input.abs_xy(0, 6);
         while (true) {
             {
                 self.mutex.lock();
@@ -174,8 +176,8 @@ const TheApp = struct {
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
-        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 0);
-        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(5, 4);
+        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(0, 5);
+        _ = tl_winsize.fg(ColorF.init_name(ColorFU{ .Blue = {} })).abs_xy(4, 5);
         while (true) {
             {
                 self.mutex.lock();

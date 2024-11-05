@@ -32,7 +32,7 @@ pub fn main() !void {
     libdef.disable_echo_and_canonical_mode(&new_terminal);
     _ = Term.disable_cursor();
     defer {
-        _ = Term.ensable_cursor();
+        _ = Term.enable_cursor();
     }
     defer {
         _ = Term.set_color_mbf(ColorMU{ .Reset = {} }, null, null);

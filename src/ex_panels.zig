@@ -25,7 +25,7 @@ const StrAE = string_stuff.AlignmentE;
 const StrAU = string_stuff.Alignment;
 const string_align = string_stuff.string_align;
 
-const write_out = std.io.getStdOut().writer();
+// const write_out = std.io.getStdOut().writer();
 
 pub fn main() !void {
     libdef.handle_sigwinch(0);
@@ -40,7 +40,7 @@ pub fn main() !void {
     libdef.disable_echo_and_canonical_mode(&new_terminal);
     _ = Term.disable_cursor();
     defer {
-        _ = Term.ensable_cursor();
+        _ = Term.enable_cursor();
     }
     defer {
         _ = Term.set_color_mbf(ColorMU{ .Reset = {} }, null, null);
@@ -228,9 +228,9 @@ const TheApp = struct {
                 }
                 _ = Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
             }
-            _ = self.root_panel.update();
-            _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
-            _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            // _ = self.root_panel.update();
+            // _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            // _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
             _ = self.root_panel.draw();
         }
     }

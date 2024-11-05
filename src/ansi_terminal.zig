@@ -19,7 +19,7 @@ pub fn disable_cursor() void {
 }
 
 /// Show cursor
-pub fn ensable_cursor() void {
+pub fn enable_cursor() void {
     _ = write_out.print("\x1B[?25h", .{}) catch unreachable;
 }
 

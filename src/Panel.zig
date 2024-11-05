@@ -47,6 +47,10 @@ pub const RenderText = struct {
     text: *TextLine = undefined,
     next_text: ?*RenderText = undefined,
     pub fn draw(self: *RenderText) void {
+        if (self.parent != null) {
+            const p = self.parent.?;
+            _ = self.text.parent_xy(@as(u32, @abs(p.anchor_x)), @as(u32, @abs(p.anchor_y)));
+        }
         _ = self.text.draw();
         if (self.next_text != null) {
             _ = self.next_text.?.draw();

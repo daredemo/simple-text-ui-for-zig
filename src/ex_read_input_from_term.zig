@@ -24,7 +24,7 @@ pub fn main() !void {
     }
     _ = Term.disable_cursor();
     defer {
-        _ = Term.ensable_cursor();
+        _ = Term.enable_cursor();
     }
     var reader = CharReader.CharReader.init();
     defer {

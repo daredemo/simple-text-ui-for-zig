@@ -3,7 +3,7 @@ const std = @import("std");
 const TextLine = @import("TextLine.zig").TextLine;
 const Border = @import("Border.zig").Border;
 const TextAlign = @import("StringStuff.zig").Alignment;
-const text_align = @import("StringStuff.zig").string_align;
+const text_align = @import("StringStuff.zig").stringAlign;
 const Term = @import("ansi_terminal.zig");
 
 const TAL = TextAlign{ .Left = {} };
@@ -45,11 +45,11 @@ pub const PositionTB = union(PositionTB_E) {
 pub const RenderText = struct {
     parent: ?*Panel = undefined,
     text: *TextLine = undefined,
-    next_text: ?*RenderText = undefined,
+    next_text: ?*RenderText = null,
     pub fn draw(self: *RenderText) void {
         if (self.parent != null) {
             const p = self.parent.?;
-            _ = self.text.parent_xy(@as(u32, @abs(p.anchor_x)), @as(u32, @abs(p.anchor_y)));
+            _ = self.text.parentXY(@as(u32, @abs(p.anchor_x)), @as(u32, @abs(p.anchor_y)));
         }
         _ = self.text.draw();
         if (self.next_text != null) {
@@ -114,7 +114,7 @@ pub const Panel = struct {
     }
 
     /// Initialize the root panel, i.e., the whole screen
-    pub fn init_root(title: ?[]const u8, parent_w: *i32, parent_h: *i32, layout: Layout, allocator: *std.mem.Allocator) *Panel {
+    pub fn initRoot(title: ?[]const u8, parent_w: *i32, parent_h: *i32, layout: Layout, allocator: *std.mem.Allocator) *Panel {
         const panel = allocator.create(Panel) catch unreachable;
         panel.* = Panel{
             .title = title,
@@ -152,7 +152,7 @@ pub const Panel = struct {
     }
 
     /// Add a new child to the end of children's list
-    pub fn append_child(self: *Panel, child: *Panel, absolute_size: ?i32, relative_size: ?f32) *Panel {
+    pub fn appendChild(self: *Panel, child: *Panel, absolute_size: ?i32, relative_size: ?f32) *Panel {
         var the_child = child;
         the_child.size_absolute = absolute_size;
         the_child.size_relative = relative_size;
@@ -163,7 +163,7 @@ pub const Panel = struct {
             self.child_head = the_child;
         } else {
             const current_child = self.child_head.?;
-            var last_child = self.get_last_child(current_child).?;
+            var last_child = self.getLastChild(current_child).?;
             last_child.sibling_next = the_child;
         }
         _ = self.ch_sizes_absolute.append(s_abs) catch unreachable;
@@ -173,7 +173,7 @@ pub const Panel = struct {
     }
 
     /// Find the last child of the current panel
-    pub fn get_last_child(self: *Panel, child: ?*Panel) ?*Panel {
+    pub fn getLastChild(self: *Panel, child: ?*Panel) ?*Panel {
         if (child == null) {
             return null;
         } else {
@@ -181,20 +181,20 @@ pub const Panel = struct {
             if (theChild.sibling_next == null) {
                 return theChild;
             } else {
-                return self.get_last_child(theChild.sibling_next);
+                return self.getLastChild(theChild.sibling_next);
             }
         }
     }
 
     /// Add a new child to the end of children's list
-    pub fn append_text(self: *Panel, child: *RenderText) *Panel {
+    pub fn appendText(self: *Panel, child: *RenderText) *Panel {
         var the_child = child;
         the_child.parent = self;
         if (self.render_text_next == null) {
             self.render_text_next = the_child;
         } else {
             const current_child = self.render_text_next.?;
-            var last_child = self.get_last_text(current_child).?;
+            var last_child = self.getLastText(current_child).?;
             last_child.next_text = the_child;
         }
         // _ = self.draw();
@@ -202,7 +202,7 @@ pub const Panel = struct {
     }
 
     /// Find the last child of the current panel
-    pub fn get_last_text(self: *Panel, child: ?*RenderText) ?*RenderText {
+    pub fn getLastText(self: *Panel, child: ?*RenderText) ?*RenderText {
         if (child == null) {
             return null;
         } else {
@@ -210,13 +210,13 @@ pub const Panel = struct {
             if (theChild.next_text == null) {
                 return theChild;
             } else {
-                return self.get_last_text(theChild.next_text);
+                return self.getLastText(theChild.next_text);
             }
         }
     }
 
     /// Set title's location (h: left, center, right; v: top, center, bottom)
-    pub fn title_location(self: *Panel, horizontal: ?TextAlign, vertical: ?PositionTB) *Panel {
+    pub fn titleLocation(self: *Panel, horizontal: ?TextAlign, vertical: ?PositionTB) *Panel {
         if (horizontal != null) {
             const a = horizontal.?;
             self.title_align = a;
@@ -225,6 +225,18 @@ pub const Panel = struct {
             const p = vertical.?;
             self.title_position = p;
         }
+        return self;
+    }
+
+    /// Set minimum width when panel is rendered
+    pub fn setMinWidth(self: *Panel, width: i32) *Panel {
+        self.minimum_width = width;
+        return self;
+    }
+
+    /// Set minimum height when panel is rendered
+    pub fn setMinHeight(self: *Panel, height: i32) *Panel {
+        self.minimum_height = height;
         return self;
     }
 
@@ -320,14 +332,21 @@ pub const Panel = struct {
                     p_w -= sum_a;
                     const w: i32 = @as(i32, @intFromFloat(@as(f32, @floatFromInt(p_w)) * self.size_relative.? / sum_r));
                     self.width = w;
-                } else {
-                    self.width = self.parent.?.width;
                 }
+                // else {
+                //         self.width = self.parent.?.width;
+                //     }
             }
             // }
             if (self.sibling_next != null) {
-                const w = if (p.layout == Layout.Vertical) 0 else self.width;
-                const h = if (p.layout == Layout.Vertical) self.height else 0;
+                var bx: i32 = 0;
+                var by: i32 = 0;
+                if (p.border != null) {
+                    bx += 1;
+                    by += 1;
+                }
+                const w = if (p.layout == Layout.Vertical) 0 else self.width; // + bx;
+                const h = if (p.layout == Layout.Vertical) self.height else 0; // + by else 0;
                 self.sibling_next.?.anchor_x = self.anchor_x + w;
                 self.sibling_next.?.anchor_y = self.anchor_y + h;
                 // }
@@ -335,15 +354,21 @@ pub const Panel = struct {
             }
         }
         if (self.child_head != null) {
-            self.child_head.?.anchor_x = self.anchor_x;
-            self.child_head.?.anchor_y = self.anchor_y;
+            var bx: i32 = 0;
+            var by: i32 = 0;
+            if (self.border != null) {
+                bx += 1;
+                by += 1;
+            }
+            self.child_head.?.anchor_x = self.anchor_x + bx;
+            self.child_head.?.anchor_y = self.anchor_y + by;
             _ = self.child_head.?.update();
         }
         return self;
     }
 
     /// Configure the border settings
-    pub fn set_border(self: *Panel, border: ?Border) *Panel {
+    pub fn setBorder(self: *Panel, border: ?Border) *Panel {
         self.border = border;
         return self;
     }
@@ -352,16 +377,16 @@ pub const Panel = struct {
     pub fn draw(self: *Panel) *Panel {
         _ = self.update();
         if (self.parent == null) {
-            _ = Term.clear_screen();
+            _ = Term.clearScreen();
         }
-        if ((self.width > self.minimum_width) and (self.height > self.minimum_height)) {
-            const hh = @as(usize, @abs(self.height)) + 1;
+        if ((self.width >= self.minimum_width) and (self.height >= self.minimum_height)) {
+            const hh = @as(usize, @abs(self.height)); // + 1;
             for (0..hh) |row| {
                 var tl_buffer_1: [512]u8 = undefined;
                 var tl_buffer_2: [512]u8 = undefined;
                 var tl_buffer_3: [512]u8 = undefined;
                 var tl = TextLine.init("");
-                _ = tl.abs_xy(@abs(self.anchor_x), @abs(self.anchor_y) + @as(u32, @intCast(row)));
+                _ = tl.absXY(@abs(self.anchor_x), @abs(self.anchor_y) + @as(u32, @intCast(row)));
                 if (self.border != null) {
                     const border = self.border.?;
                     const b_t = border.top orelse ' ';
@@ -379,37 +404,37 @@ pub const Panel = struct {
                             const ts2 = text_align(&tl_buffer_3, ts1, b_t, @as(usize, @abs(self.width)) - 2, self.title_align);
                             const ts3 = text_align(&tl_buffer_1, ts2, b_tl, @as(usize, @abs(self.width)) - 1, TAR);
                             const ts4 = text_align(&tl_buffer_2, ts3, b_tr, @as(usize, @abs(self.width)), TAL);
-                            _ = tl.text_line(ts4).draw();
+                            _ = tl.textLine(ts4).draw();
                         } else {
                             const ts2 = text_align(&tl_buffer_3, "", b_t, @as(usize, @abs(self.width)) - 2, self.title_align);
                             const ts3 = text_align(&tl_buffer_1, ts2, b_tl, @as(usize, @abs(self.width)) - 1, TAR);
                             const ts4 = text_align(&tl_buffer_2, ts3, b_tr, @as(usize, @abs(self.width)), TAL);
-                            _ = tl.text_line(ts4).draw();
+                            _ = tl.textLine(ts4).draw();
                         }
-                    } else if (row == self.height) {
+                    } else if (row == self.height - 1) {
                         if ((self.title != null) and (self.title_position.tag() == 2)) {
                             const ts = text_align(&tl_buffer_1, self.title.?, ' ', self.title.?.len + 2, TAC);
                             const ts1 = text_align(&tl_buffer_2, ts, b_b, ts.len + 2, TAC);
                             const ts2 = text_align(&tl_buffer_3, ts1, b_b, @as(usize, @abs(self.width)) - 2, self.title_align);
                             const ts3 = text_align(&tl_buffer_1, ts2, b_bl, @as(usize, @abs(self.width)) - 1, TAR);
                             const ts4 = text_align(&tl_buffer_2, ts3, b_br, @as(usize, @abs(self.width)), TAL);
-                            _ = tl.text_line(ts4).draw();
+                            _ = tl.textLine(ts4).draw();
                         } else {
                             const ts2 = text_align(&tl_buffer_3, "", b_b, @as(usize, @abs(self.width)) - 2, self.title_align);
                             const ts3 = text_align(&tl_buffer_1, ts2, b_bl, @as(usize, @abs(self.width)) - 1, TAR);
                             const ts4 = text_align(&tl_buffer_2, ts3, b_br, @as(usize, @abs(self.width)), TAL);
-                            _ = tl.text_line(ts4).draw();
+                            _ = tl.textLine(ts4).draw();
                         }
                     } else {
                         const ts2 = text_align(&tl_buffer_3, "", ' ', @as(usize, @abs(self.width)) - 2, self.title_align);
                         const ts3 = text_align(&tl_buffer_1, ts2, b_l, @as(usize, @abs(self.width)) - 1, TAR);
                         const ts4 = text_align(&tl_buffer_2, ts3, b_r, @as(usize, @abs(self.width)), TAL);
-                        _ = tl.text_line(ts4).draw();
+                        _ = tl.textLine(ts4).draw();
                     }
                 } else {
                     if (self.parent != null) {
                         const t_line = text_align(&tl_buffer_1, "", ' ', @as(usize, @abs(self.width)) - 2, TextAlign{ .Left = {} });
-                        _ = tl.text_line(t_line).draw();
+                        _ = tl.textLine(t_line).draw();
                     }
                 }
             }

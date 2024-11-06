@@ -26,7 +26,7 @@ pub const CharReader = struct {
     }
 
     /// Push the last character back to the input stream
-    pub fn ungetc_last(self: *CharReader) void {
+    pub fn ungetcLast(self: *CharReader) void {
         self.char_buffer = self.char_last_read;
         self.char_last_read = null;
     }
@@ -44,7 +44,7 @@ pub const CharReader = struct {
     }
 
     /// Clean the stream by removing chars from the stream
-    pub fn clean_stdin(self: *CharReader) void {
+    pub fn cleanStdin(self: *CharReader) void {
         _ = self;
         var tmp_buffer: [1024]u8 = undefined;
         _ = std.io.getStdIn().reader().readUntilDelimiterOrEof(&tmp_buffer, '\n') catch unreachable;

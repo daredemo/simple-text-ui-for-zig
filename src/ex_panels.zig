@@ -23,43 +23,49 @@ const RenderText = @import("Panel.zig").RenderText;
 const TitlePosition = @import("Panel.zig").PositionTB;
 const StrAE = string_stuff.AlignmentE;
 const StrAU = string_stuff.Alignment;
-const string_align = string_stuff.string_align;
+const stringAlign = string_stuff.stringAlign;
 
 // const write_out = std.io.getStdOut().writer();
 
 pub fn main() !void {
-    libdef.handle_sigwinch(0);
-    libdef.set_signal();
-    _ = Term.save_terminal_state();
+    libdef.handleSigwinch(0);
+    libdef.setSignal();
+    _ = Term.saveTerminalState();
     defer {
-        _ = Term.restore_terminal_state();
+        _ = Term.restoreTerminalState();
     }
-    const old_terminal = libdef.save_terminal_settings();
-    var new_terminal = libdef.save_terminal_settings();
-    defer libdef.restore_terminal_settings(old_terminal);
-    libdef.disable_echo_and_canonical_mode(&new_terminal);
-    _ = Term.disable_cursor();
+    const old_terminal = libdef.saveTerminalSettings();
+    var new_terminal = libdef.saveTerminalSettings();
+    defer libdef.restoreTerminalSettings(old_terminal);
+    libdef.disableEchoAndCanonicalMode(&new_terminal);
+    _ = Term.disableCursor();
     defer {
-        _ = Term.enable_cursor();
+        _ = Term.enableCursor();
     }
     defer {
-        _ = Term.set_color_mbf(ColorMU{ .Reset = {} }, null, null);
+        _ = Term.setColorMBFName(ColorMU{
+            .Reset = {},
+        }, null, null);
     }
-    _ = Term.clear_screen();
+    _ = Term.clearScreen();
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     var allocator = gpa.allocator();
     // PANEL: ROOT
-    const panel_root = Panel.init_root("FULL", &libdef.win_width, &libdef.win_height, Layout.Horizontal, &allocator).set_border(null);
+    const panel_root = Panel.initRoot("FULL", &libdef.win_width, &libdef.win_height, Layout.Horizontal, &allocator).setBorder(null);
     defer _ = allocator.destroy(panel_root);
     defer _ = panel_root.deinit(&allocator);
     // PANEL: MAIN
     const panel_main = Panel.init("INFO", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main);
     defer _ = panel_main.deinit(&allocator);
-    const border_1 = Border.Border.init(&allocator).set_border_style(Border.BorderStyle{ .LightRound = {} });
+    const border_1 = Border.Border.init(&allocator).setBorderStyle(Border.BorderStyle{
+        .LightRound = {},
+    });
     defer _ = allocator.destroy(border_1);
-    _ = panel_main.set_border(border_1.*).title_location(StrAU{ .Center = {} }, TitlePosition{ .Top = {} });
+    _ = panel_main.setBorder(border_1.*).titleLocation(StrAU{
+        .Center = {},
+    }, TitlePosition{ .Top = {} });
     // PANEL: VOID LEFT OF MAIN
     const panel_main_void_l = Panel.init("VOID L", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main_void_l);
@@ -68,25 +74,39 @@ pub fn main() !void {
     const panel_main_void_r = Panel.init("VOID R", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main_void_r);
     defer panel_main_void_r.deinit(&allocator);
-    _ = panel_main_void_l.set_border(border_1.*).title_location(StrAU{ .Left = {} }, TitlePosition{ .Bottom = {} });
-    _ = panel_main_void_r.set_border(border_1.*).title_location(StrAU{ .Right = {} }, TitlePosition{ .Bottom = {} });
-    _ = panel_root.append_child(panel_main_void_l, null, 1.0);
-    _ = panel_root.append_child(panel_main, 30, null);
-    _ = panel_root.append_child(panel_main_void_r, null, 1.0);
+    _ = panel_main_void_l.setBorder(border_1.*).titleLocation(StrAU{
+        .Left = {},
+    }, TitlePosition{
+        .Bottom = {},
+    });
+    _ = panel_main_void_r.setBorder(border_1.*).titleLocation(StrAU{
+        .Right = {},
+    }, TitlePosition{
+        .Bottom = {},
+    });
+    _ = panel_root.appendChild(panel_main_void_l, null, 1.0);
+    _ = panel_root.appendChild(panel_main, 30, null);
+    _ = panel_root.appendChild(panel_main_void_r, null, 1.0);
     var the_app = TheApp.init("Threaded App", panel_root, 20, 15);
-    var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
+    var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{
+        &the_app,
+    });
     defer thread_heartbeat.join();
-    var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{&the_app});
+    var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{
+        &the_app,
+    });
     defer thread_inputs.join();
-    _ = Term.set_color_B(ColorB.init_name(ColorBU{ .Reset = {} }));
+    _ = Term.setColorB(ColorB.initName(ColorBU{
+        .Reset = {},
+    }));
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
-    try arg.get_inputs();
+    try arg.getInputs();
 }
 
 pub fn doAppHeartBeatThread(arg: *TheApp) !void {
-    try arg.get_heart_beat();
+    try arg.getHeartBeat();
 }
 
 const TheApp = struct {
@@ -109,10 +129,10 @@ const TheApp = struct {
         };
     }
 
-    pub fn get_inputs(self: *TheApp) !void {
+    pub fn getInputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
         // var tl_input = TextLine.init(" ");
-        // _ = tl_input.abs_xy(0, 8);
+        // _ = tl_input.absXY(0, 8);
         while (true) {
             {
                 self.mutex.lock();
@@ -123,39 +143,39 @@ const TheApp = struct {
             const ch = if (c) |cc| cc else 0;
             switch (ch) {
                 'p' => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line("Printing...").draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine("Printing...").draw();
                 },
                 'r' => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line("Running...").draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine("Running...").draw();
                 },
                 9 => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line("TAB").draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine("TAB").draw();
                 },
                 10 => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line("ENTER").draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine("ENTER").draw();
                 },
                 32 => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line("SPACE").draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine("SPACE").draw();
                 },
                 'q' => {
-                    _ = Term.erase_c_e_s();
+                    _ = Term.eraseCES();
                     self.mutex.lock();
                     defer self.mutex.unlock();
                     self.is_running = false;
                     break;
                 },
                 33...111 => {
-                    //     _ = Term.erase_c_e_s();
-                    //     _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
+                    //     _ = Term.eraseCES();
+                    //     _ = tl_input.textLine(([2]u8{ ch, 0 })[0..]).draw();
                 },
                 115...126 => {
-                    // _ = Term.erase_c_e_s();
-                    // _ = tl_input.text_line(([2]u8{ ch, 0 })[0..]).draw();
+                    // _ = Term.eraseCES();
+                    // _ = tl_input.textLine(([2]u8{ ch, 0 })[0..]).draw();
                 },
                 27 => {
                     const ch1 = reader.getchar();
@@ -165,27 +185,27 @@ const TheApp = struct {
                         const chb = if (ch2) |cc| cc else 0;
                         switch (chb) {
                             'A' => {
-                                // _ = Term.erase_c_e_s();
-                                // _ = tl_input.text_line("Arrow UP").draw();
+                                // _ = Term.eraseCES();
+                                // _ = tl_input.textLine("Arrow UP").draw();
                             },
                             'B' => {
-                                // _ = Term.erase_c_e_s();
-                                // _ = tl_input.text_line("Arrow DOWN").draw();
+                                // _ = Term.eraseCES();
+                                // _ = tl_input.textLine("Arrow DOWN").draw();
                             },
                             'C' => {
-                                // _ = Term.erase_c_e_s();
-                                // _ = tl_input.text_line("Arrow RIGHT").draw();
+                                // _ = Term.eraseCES();
+                                // _ = tl_input.textLine("Arrow RIGHT").draw();
                             },
                             'D' => {
-                                // _ = Term.erase_c_e_s();
-                                // _ = tl_input.text_line("Arrow LEFT").draw();
+                                // _ = Term.eraseCES();
+                                // _ = tl_input.textLine("Arrow LEFT").draw();
                             },
                             else => {},
                         }
                     } else {
-                        _ = reader.ungetc_last();
-                        // _ = Term.erase_c_e_s();
-                        // _ = tl_input.text_line("ESCAPE").draw();
+                        _ = reader.ungetcLast();
+                        // _ = Term.eraseCES();
+                        // _ = tl_input.textLine("ESCAPE").draw();
                     }
                 },
                 else => {},
@@ -193,20 +213,26 @@ const TheApp = struct {
         }
     }
 
-    pub fn get_heart_beat(self: *TheApp) !void {
+    pub fn getHeartBeat(self: *TheApp) !void {
         var counter: u8 = 0;
         var tl_heart = TextLine.init("♥");
-        _ = tl_heart.fg(ColorF.init_name(ColorFU{ .Blue = {} })); //.abs_xy(0, 5);
+        _ = tl_heart.fg(ColorF.initName(ColorFU{
+            .Blue = {},
+        })); //.absXY(0, 5);
         var tl_panelinfo = TextLine.init("q -- quit/exit");
-        _ = tl_panelinfo.relative_xy(2, 2);
+        _ = tl_panelinfo.relativeXY(2, 2);
         const child_head = self.root_panel.child_head.?;
         const child_2 = child_head.sibling_next.?;
-        _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y)).relative_xy(2, 1);
-        _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
-        var rt1 = RenderText{ .parent = child_2, .text = &tl_heart, .next_text = null };
-        _ = child_2.append_text(&rt1);
+        _ = tl_heart.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y)).relativeXY(2, 1);
+        _ = tl_panelinfo.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+        var rt1 = RenderText{
+            .parent = child_2,
+            .text = &tl_heart,
+            .next_text = null,
+        };
+        _ = child_2.appendText(&rt1);
         var rt2 = RenderText{ .parent = null, .text = &tl_panelinfo, .next_text = null };
-        _ = child_2.append_text(&rt2);
+        _ = child_2.appendText(&rt2);
         _ = self.root_panel.draw();
         while (true) {
             {
@@ -222,15 +248,17 @@ const TheApp = struct {
                 self.mutex.lock();
                 defer self.mutex.unlock();
                 if (self.heart_beat) {
-                    _ = tl_heart.text_line("♥");
+                    _ = tl_heart.textLine("♥");
                 } else {
-                    _ = tl_heart.text_line(" ");
+                    _ = tl_heart.textLine(" ");
                 }
-                _ = Term.set_color_F(ColorF.init_name(ColorFU{ .Default = {} }));
+                _ = Term.setColorF(ColorF.initName(ColorFU{
+                    .Default = {},
+                }));
             }
             // _ = self.root_panel.update();
-            // _ = tl_heart.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
-            // _ = tl_panelinfo.parent_xy(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            // _ = tl_heart.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+            // _ = tl_panelinfo.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
             _ = self.root_panel.draw();
         }
     }

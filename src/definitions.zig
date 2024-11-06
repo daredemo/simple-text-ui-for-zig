@@ -17,14 +17,14 @@ pub const struct_winsize = extern struct {
     ws_xpixel: c_ushort = @import("std").mem.zeroes(c_ushort),
     ws_ypixel: c_ushort = @import("std").mem.zeroes(c_ushort),
 };
-pub extern fn set_signal() void;
-pub extern fn save_terminal_settings() struct_termios;
-pub extern fn restore_terminal_settings(arg_oldt: struct_termios) void;
-pub extern fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) void;
+pub extern fn setSignal() void;
+pub extern fn saveTerminalSettings() struct_termios;
+pub extern fn restoreTerminalSettings(arg_oldt: struct_termios) void;
+pub extern fn disableEchoAndCanonicalMode(arg_state: [*c]struct_termios) void;
 // pub extern fn get_terminal_size() struct_winsize;
 pub const sig_atomic_t = c_int;
 pub extern var win_width: sig_atomic_t;
 pub extern var win_height: sig_atomic_t;
 pub extern fn setup_sigint() void;
 pub extern fn setup_sigwinch() void;
-pub extern fn handle_sigwinch(sig: c_int) void;
+pub extern fn handleSigwinch(sig: c_int) void;

@@ -23,7 +23,7 @@ pub const Alignment = union(AlignmentE) {
     }
 };
 
-pub fn string_left(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringLeft(str: []const u8, fill: u21, len: usize, writer: anytype) void {
     _ = std.fmt.formatText(str, "s", std.fmt.FormatOptions{
         .alignment = .left,
         .fill = fill,
@@ -31,7 +31,7 @@ pub fn string_left(str: []const u8, fill: u21, len: usize, writer: anytype) void
     }, writer) catch unreachable;
 }
 
-pub fn string_right(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringRight(str: []const u8, fill: u21, len: usize, writer: anytype) void {
     _ = std.fmt.formatText(str, "s", std.fmt.FormatOptions{
         .alignment = .right,
         .fill = fill,
@@ -39,7 +39,7 @@ pub fn string_right(str: []const u8, fill: u21, len: usize, writer: anytype) voi
     }, writer) catch unreachable;
 }
 
-pub fn string_center(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringCenter(str: []const u8, fill: u21, len: usize, writer: anytype) void {
     _ = std.fmt.formatText(str, "s", std.fmt.FormatOptions{
         .alignment = .center,
         .fill = fill,
@@ -47,23 +47,23 @@ pub fn string_center(str: []const u8, fill: u21, len: usize, writer: anytype) vo
     }, writer) catch unreachable;
 }
 
-pub fn string_align(buf: []u8, str: []const u8, fill: u21, len: usize, alignment: Alignment) []u8 {
+pub fn stringAlign(buf: []u8, str: []const u8, fill: u21, len: usize, alignment: Alignment) []u8 {
     var stream = std.io.fixedBufferStream(buf);
     switch (alignment.tag()) {
         0 => {
-            _ = string_left("", fill, len, stream.writer());
+            _ = stringLeft("", fill, len, stream.writer());
         },
         1 => {
-            _ = string_left(str, fill, len, stream.writer());
+            _ = stringLeft(str, fill, len, stream.writer());
         },
         2 => {
-            _ = string_right(str, fill, len, stream.writer());
+            _ = stringRight(str, fill, len, stream.writer());
         },
         3 => {
-            _ = string_center(str, fill, len, stream.writer());
+            _ = stringCenter(str, fill, len, stream.writer());
         },
         else => {
-            _ = string_left(str, fill, len, stream.writer());
+            _ = stringLeft(str, fill, len, stream.writer());
         },
     }
     return stream.getWritten();

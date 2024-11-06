@@ -1020,10 +1020,10 @@ pub extern fn __libc_current_sigrtmin() c_int;
 pub extern fn __libc_current_sigrtmax() c_int;
 pub export var win_width: sig_atomic_t = 0;
 pub export var win_height: sig_atomic_t = 0;
-pub export fn handle_sigint(sig: c_int) void {
+pub export fn handleSigint(sig: c_int) void {
     _ = &sig;
 }
-pub export fn handle_sigwinch(sig: c_int) void {
+pub export fn handleSigwinch(sig: c_int) void {
     _ = &sig;
     var w: struct_winsize = undefined;
     _ = &w;
@@ -1032,26 +1032,26 @@ pub export fn handle_sigwinch(sig: c_int) void {
         win_height = @as(sig_atomic_t, @bitCast(@as(c_uint, w.ws_row)));
     }
 }
-pub export fn save_terminal_settings() struct_termios {
+pub export fn saveTerminalSettings() struct_termios {
     var oldt: struct_termios = undefined;
     _ = &oldt;
     _ = tcgetattr(@as(c_int, 0), &oldt);
     return oldt;
 }
-pub export fn restore_terminal_settings(arg_oldt: struct_termios) void {
+pub export fn restoreTerminalSettings(arg_oldt: struct_termios) void {
     var oldt = arg_oldt;
     _ = &oldt;
     _ = tcsetattr(@as(c_int, 0), @as(c_int, 0), &oldt);
 }
-pub export fn disable_echo_and_canonical_mode(arg_state: [*c]struct_termios) void {
+pub export fn disableEchoAndCanonicalMode(arg_state: [*c]struct_termios) void {
     var state = arg_state;
     _ = &state;
     state.*.c_lflag &= @as(tcflag_t, @bitCast(~(@as(c_int, 2) | @as(c_int, 8))));
     _ = tcsetattr(@as(c_int, 0), @as(c_int, 0), state);
 }
-pub export fn set_signal() void {
-    _ = signal(@as(c_int, 2), &handle_sigint);
-    _ = signal(@as(c_int, 28), &handle_sigwinch);
+pub export fn setSignal() void {
+    _ = signal(@as(c_int, 2), &handleSigint);
+    _ = signal(@as(c_int, 28), &handleSigwinch);
 }
 pub const __llvm__ = @as(c_int, 1);
 pub const __clang__ = @as(c_int, 1);

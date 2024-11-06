@@ -157,63 +157,63 @@ pub const Border = struct {
         return border;
     }
 
-    pub fn set_top(self: *Border, v: ?u21) *Border {
+    pub fn setTop(self: *Border, v: ?u21) *Border {
         self.top = v;
         return self;
     }
-    pub fn set_bottom(self: *Border, v: ?u21) *Border {
+    pub fn setBottom(self: *Border, v: ?u21) *Border {
         self.bottom = v;
         return self;
     }
-    pub fn set_left(self: *Border, v: ?u21) *Border {
+    pub fn setLeft(self: *Border, v: ?u21) *Border {
         self.left = v;
         return self;
     }
-    pub fn set_right(self: *Border, v: ?u21) *Border {
+    pub fn setRight(self: *Border, v: ?u21) *Border {
         self.right = v;
         return self;
     }
-    pub fn set_top_left(self: *Border, v: ?u21) *Border {
+    pub fn setTopLeft(self: *Border, v: ?u21) *Border {
         self.top_left = v;
         return self;
     }
-    pub fn set_top_right(self: *Border, v: ?u21) *Border {
+    pub fn setTopRight(self: *Border, v: ?u21) *Border {
         self.top_right = v;
         return self;
     }
-    pub fn set_bottom_left(self: *Border, v: ?u21) *Border {
+    pub fn setBottomLeft(self: *Border, v: ?u21) *Border {
         self.bottom_left = v;
         return self;
     }
-    pub fn set_bottom_right(self: *Border, v: ?u21) *Border {
+    pub fn setBottomRight(self: *Border, v: ?u21) *Border {
         self.bottom_right = v;
         return self;
     }
-    pub fn set_top_all(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
+    pub fn setTopAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_left = l;
         self.top = c;
         self.top_right = r;
         return self;
     }
-    pub fn set_bottom_all(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
+    pub fn setBottomAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.bottom_left = l;
         self.bottom = c;
         self.bottom_right = r;
         return self;
     }
-    pub fn set_left_all(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
+    pub fn setLeftAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_left = l;
         self.left = c;
         self.bottom_left = r;
         return self;
     }
-    pub fn set_right_all(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
+    pub fn setRightAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_right = l;
         self.right = c;
         self.bottom_right = r;
         return self;
     }
-    pub fn set_border_style(self: *Border, style: BorderStyle) *Border {
+    pub fn setBorderStyle(self: *Border, style: BorderStyle) *Border {
         const tags = style.tag();
         self.top = tags.horizontal;
         self.bottom = tags.horizontal;

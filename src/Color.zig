@@ -230,30 +230,36 @@ pub const ColorB = struct {
     rgb: ?RGB = undefined,
     type_data: ColorU,
 
-    pub fn init_name(name: ColorBU) ColorB {
+    pub fn initName(name: ColorBU) ColorB {
         return ColorB{
             .name = name,
             .value = null,
             .rgb = null,
-            .type_data = ColorU{ .name = {} },
+            .type_data = ColorU{
+                .name = {},
+            },
         };
     }
 
-    pub fn init_value(value: u8) ColorB {
+    pub fn initValue(value: u8) ColorB {
         return ColorB{
             .name = null,
             .value = value,
             .rgb = null,
-            .type_data = ColorU{ .value = {} },
+            .type_data = ColorU{
+                .value = {},
+            },
         };
     }
 
-    pub fn init_rgb(rgb: RGB) ColorB {
+    pub fn initRGB(rgb: RGB) ColorB {
         return ColorB{
             .name = null,
             .value = null,
             .rgb = rgb,
-            .type_data = ColorU{ .rgb = {} },
+            .type_data = ColorU{
+                .rgb = {},
+            },
         };
     }
 };
@@ -264,30 +270,36 @@ pub const ColorF = struct {
     rgb: ?RGB = undefined,
     type_data: ColorU,
 
-    pub fn init_name(name: ColorFU) ColorF {
+    pub fn initName(name: ColorFU) ColorF {
         return ColorF{
             .name = name,
             .value = null,
             .rgb = null,
-            .type_data = ColorU{ .name = {} },
+            .type_data = ColorU{
+                .name = {},
+            },
         };
     }
 
-    pub fn init_value(value: u8) ColorF {
+    pub fn initValue(value: u8) ColorF {
         return ColorF{
             .name = null,
             .value = value,
             .rgb = null,
-            .type_data = ColorU{ .value = {} },
+            .type_data = ColorU{
+                .value = {},
+            },
         };
     }
 
-    pub fn init_rgb(rgb: RGB) ColorF {
+    pub fn initRGB(rgb: RGB) ColorF {
         return ColorF{
             .name = null,
             .value = null,
             .rgb = rgb,
-            .type_data = ColorU{ .rgb = {} },
+            .type_data = ColorU{
+                .rgb = {},
+            },
         };
     }
 };

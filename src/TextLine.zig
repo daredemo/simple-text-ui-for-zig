@@ -49,39 +49,39 @@ pub const TextLine = struct {
         };
     }
 
-    pub fn text_line(self: *TextLine, line: []const u8) *TextLine {
+    pub fn textLine(self: *TextLine, line: []const u8) *TextLine {
         self.text = line;
         return self;
     }
 
     ///
-    pub fn abs_x(self: *TextLine, x: u32) *TextLine {
+    pub fn absX(self: *TextLine, x: u32) *TextLine {
         self.absolute_x = x;
         return self;
     }
 
     ///
-    pub fn abs_y(self: *TextLine, y: u32) *TextLine {
+    pub fn absY(self: *TextLine, y: u32) *TextLine {
         self.absolute_y = y;
         return self;
     }
 
     ///
-    pub fn abs_xy(self: *TextLine, x: u32, y: u32) *TextLine {
+    pub fn absXY(self: *TextLine, x: u32, y: u32) *TextLine {
         self.absolute_x = x;
         self.absolute_y = y;
         return self;
     }
 
     ///
-    pub fn parent_xy(self: *TextLine, x: u32, y: u32) *TextLine {
+    pub fn parentXY(self: *TextLine, x: u32, y: u32) *TextLine {
         self.parent_x = x;
         self.parent_y = y;
         return self;
     }
 
     ///
-    pub fn relative_xy(self: *TextLine, x: i32, y: i32) *TextLine {
+    pub fn relativeXY(self: *TextLine, x: i32, y: i32) *TextLine {
         self.relative_x = x;
         self.relative_y = y;
         return self;
@@ -89,8 +89,12 @@ pub const TextLine = struct {
 
     /// Set background color
     pub fn bg(self: *TextLine, col_bg: ColorB) *TextLine {
-        const b_default = ColorB.init_name(ColorBU{ .Default = {} });
-        const f_default = ColorF.init_name(ColorFU{ .Default = {} });
+        const b_default = ColorB.initName(ColorBU{
+            .Default = {},
+        });
+        const f_default = ColorF.initName(ColorFU{
+            .Default = {},
+        });
         var style = self.color orelse ColorStyle.init(b_default, f_default, null);
         style.bg = col_bg;
         self.color = style;
@@ -99,8 +103,12 @@ pub const TextLine = struct {
 
     /// Set foreground color
     pub fn fg(self: *TextLine, col_fg: ColorF) *TextLine {
-        const b_default = ColorB.init_name(ColorBU{ .Default = {} });
-        const f_default = ColorF.init_name(ColorFU{ .Default = {} });
+        const b_default = ColorB.initName(ColorBU{
+            .Default = {},
+        });
+        const f_default = ColorF.initName(ColorFU{
+            .Default = {},
+        });
         var style = self.color orelse ColorStyle.init(b_default, f_default, null);
         style.fg = col_fg;
         self.color = style;
@@ -109,8 +117,12 @@ pub const TextLine = struct {
 
     /// Set color mode
     pub fn md(self: *TextLine, mode: ColorMU) *TextLine {
-        const b_default = ColorB.init_name(ColorBU{ .Default = {} });
-        const f_default = ColorF.init_name(ColorFU{ .Default = {} });
+        const b_default = ColorB.initName(ColorBU{
+            .Default = {},
+        });
+        const f_default = ColorF.initName(ColorFU{
+            .Default = {},
+        });
         var style = self.color orelse ColorStyle.init(b_default, f_default, null);
         style.md = mode;
         self.color = style;
@@ -120,24 +132,24 @@ pub const TextLine = struct {
     pub fn draw(self: *TextLine) *TextLine {
         const bu_default = ColorBU{ .Reset = {} };
         const fu_default = ColorFU{ .Reset = {} };
-        const b_default = ColorB.init_name(bu_default);
-        const f_default = ColorF.init_name(fu_default);
+        const b_default = ColorB.initName(bu_default);
+        const f_default = ColorF.initName(fu_default);
         const m_reset = ColorMU{ .Reset = {} };
         const style = self.color orelse ColorStyle.init(b_default, f_default, null);
         if ((self.absolute_x != null) and (self.absolute_y != null)) {
-            _ = Term.cursor_to(self.absolute_y.?, self.absolute_x.?);
+            _ = Term.cursorTo(self.absolute_y.?, self.absolute_x.?);
         } else {
             const px = self.parent_x orelse 0;
             const py = self.parent_y orelse 0;
             const rx = self.relative_x orelse 0;
             const ry = self.relative_y orelse 0;
-            _ = Term.cursor_to(py + @abs(ry), px + @abs(rx));
+            _ = Term.cursorTo(py + @abs(ry), px + @abs(rx));
         }
-        _ = Term.set_color_BF(style.bg.?, style.fg.?);
+        _ = Term.setColorBF(style.bg.?, style.fg.?);
         if (self.text != null) {
             _ = w_out.print("{s}", .{self.text.?}) catch unreachable;
         }
-        _ = Term.set_color_mbf(m_reset, bu_default, fu_default);
+        _ = Term.setColorMBFName(m_reset, bu_default, fu_default);
         return self;
     }
 };

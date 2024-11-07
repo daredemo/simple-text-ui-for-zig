@@ -12,16 +12,16 @@ const ColorF = @import("Color.zig").ColorF;
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
 const ColorMU = @import("Color.zig").ColorMU;
-const ColorBE = @import("Color.zig").ColorBE;
-const ColorFE = @import("Color.zig").ColorFE;
-const ColorME = @import("Color.zig").ColorME;
+// const ColorBE = @import("Color.zig").ColorBE;
+// const ColorFE = @import("Color.zig").ColorFE;
+// const ColorME = @import("Color.zig").ColorME;
 const ColorStype = @import("Color.zig").ColorStyle;
 const TextLine = @import("TextLine.zig").TextLine;
 const Panel = @import("Panel.zig").Panel;
 const Layout = @import("Panel.zig").Layout;
 const RenderText = @import("Panel.zig").RenderText;
 const TitlePosition = @import("Panel.zig").PositionTB;
-const StrAE = string_stuff.AlignmentE;
+// const StrAE = string_stuff.AlignmentE;
 const StrAU = string_stuff.Alignment;
 const stringAlign = string_stuff.stringAlign;
 
@@ -43,9 +43,11 @@ pub fn main() !void {
         _ = Term.enableCursor();
     }
     defer {
-        _ = Term.setColorMBFName(ColorMU{
-            .Reset = {},
-        }, null, null);
+        _ = Term.setColorMBFName(
+            ColorMU.Reset,
+            null,
+            null,
+        );
     }
     _ = Term.clearScreen();
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -59,13 +61,11 @@ pub fn main() !void {
     const panel_main = Panel.init("INFO", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main);
     defer _ = panel_main.deinit(&allocator);
-    const border_1 = Border.Border.init(&allocator).setBorderStyle(Border.BorderStyle{
-        .LightRound = {},
-    });
+    const border_1 = Border.Border.init(&allocator).setBorderStyle(
+        Border.BorderStyle.LightRound,
+    );
     defer _ = allocator.destroy(border_1);
-    _ = panel_main.setBorder(border_1.*).titleLocation(StrAU{
-        .Center = {},
-    }, TitlePosition{ .Top = {} });
+    _ = panel_main.setBorder(border_1.*).titleLocation(StrAU.Center, TitlePosition.Top);
     // PANEL: VOID LEFT OF MAIN
     const panel_main_void_l = Panel.init("VOID L", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main_void_l);
@@ -74,16 +74,8 @@ pub fn main() !void {
     const panel_main_void_r = Panel.init("VOID R", panel_root, Layout.Vertical, &allocator);
     defer _ = allocator.destroy(panel_main_void_r);
     defer panel_main_void_r.deinit(&allocator);
-    _ = panel_main_void_l.setBorder(border_1.*).titleLocation(StrAU{
-        .Left = {},
-    }, TitlePosition{
-        .Bottom = {},
-    });
-    _ = panel_main_void_r.setBorder(border_1.*).titleLocation(StrAU{
-        .Right = {},
-    }, TitlePosition{
-        .Bottom = {},
-    });
+    _ = panel_main_void_l.setBorder(border_1.*).titleLocation(StrAU.Left, TitlePosition.Bottom);
+    _ = panel_main_void_r.setBorder(border_1.*).titleLocation(StrAU.Right, TitlePosition.Bottom);
     _ = panel_root.appendChild(panel_main_void_l, null, 1.0);
     _ = panel_root.appendChild(panel_main, 30, null);
     _ = panel_root.appendChild(panel_main_void_r, null, 1.0);
@@ -96,9 +88,7 @@ pub fn main() !void {
         &the_app,
     });
     defer thread_inputs.join();
-    _ = Term.setColorB(ColorB.initName(ColorBU{
-        .Reset = {},
-    }));
+    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
@@ -216,9 +206,7 @@ const TheApp = struct {
     pub fn getHeartBeat(self: *TheApp) !void {
         var counter: u8 = 0;
         var tl_heart = TextLine.init("♥");
-        _ = tl_heart.fg(ColorF.initName(ColorFU{
-            .Blue = {},
-        })); //.absXY(0, 5);
+        _ = tl_heart.fg(ColorF.initName(ColorFU.Blue)); //.absXY(0, 5);
         var tl_panelinfo = TextLine.init("q -- quit/exit");
         _ = tl_panelinfo.relativeXY(2, 2);
         const child_head = self.root_panel.child_head.?;
@@ -252,9 +240,7 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.textLine(" ");
                 }
-                _ = Term.setColorF(ColorF.initName(ColorFU{
-                    .Default = {},
-                }));
+                _ = Term.setColorF(ColorF.initName(ColorFU.Default));
             }
             // _ = self.root_panel.update();
             // _ = tl_heart.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));

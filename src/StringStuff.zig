@@ -1,13 +1,6 @@
 const std = @import("std");
 
-pub const AlignmentE = enum {
-    None,
-    Left,
-    Right,
-    Center,
-};
-
-pub const Alignment = union(AlignmentE) {
+pub const Alignment = enum {
     None,
     Left,
     Right,

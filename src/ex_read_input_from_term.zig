@@ -9,14 +9,14 @@ const ColorF = ColorDef.ColorF;
 const ColorBU = ColorDef.ColorBU;
 const ColorFU = ColorDef.ColorFU;
 const ColorMU = ColorDef.ColorMU;
-const ColorBE = ColorDef.ColorBE;
-const ColorFE = ColorDef.ColorFE;
-const ColorME = ColorDef.ColorME;
+// const ColorBE = ColorDef.ColorBE;
+// const ColorFE = ColorDef.ColorFE;
+// const ColorME = ColorDef.ColorME;
 const ColorStyle = ColorDef.ColorStyle;
 
 pub fn main() !void {
     const write_out = std.io.getStdOut().writer();
-    const color_test = ColorB.initName(ColorBE.Green);
+    const color_test = ColorB.initName(ColorBU.Green);
 
     _ = Term.saveTerminalState();
     defer {
@@ -59,41 +59,47 @@ pub fn main() !void {
     _ = Term.cursorTo(0, 0);
     Term.clearScreen();
     const f_black = ColorF.initRGB(RGB.init(0, 0, 0));
-    const f_blue = ColorF.initName(ColorFU{ .Blue = {} });
-    const b_brightwhite = ColorB.initName(ColorBU{
-        .BrightWhite = {},
-    });
-    _ = Term.setColorBRGB(255, null, null);
+    const f_blue = ColorF.initName(ColorFU.Blue);
+    const b_brightwhite = ColorB.initName(ColorBU.BrightWhite);
+    _ = Term.setColorBRGB(
+        255,
+        null,
+        null,
+    );
     _ = Term.setColorF(f_black);
     _ = try write_out.print("TOP LEVEL TITLE", .{});
     _ = Term.cursorTo(2, 0);
     _ = Term.setColorBF(b_brightwhite, f_blue);
     _ = try write_out.print("The second level title", .{});
     _ = Term.cursorTo(3, 0);
-    const dim_white_blue = ColorStyle.init(b_brightwhite, f_blue, ColorMU{
-        .Dim = {},
-    });
+    const dim_white_blue = ColorStyle.init(
+        b_brightwhite,
+        f_blue,
+        ColorMU.Dim,
+    );
     _ = Term.setColorStyle(dim_white_blue);
     _ = try write_out.print("A dim second level title", .{});
-    _ = Term.setColorMD(ColorMU{
-        .Reset = {},
-    });
+    _ = Term.setColorMD(ColorMU.Reset);
     _ = Term.cursorDownB(null);
-    _ = Term.setColorMBFName(ColorMU{ .Underline = {} }, null, ColorFU{
-        .Blue = {},
-    });
+    _ = Term.setColorMBFName(
+        ColorMU.Underline,
+        null,
+        ColorFU.Blue,
+    );
     _ = try write_out.print("More text", .{});
     _ = Term.cursorDownB(null);
-    _ = Term.setColorMBFName(ColorMU{
-        .Underline = {},
-    }, null, ColorFU{
-        .BrightBlue = {},
-    });
+    _ = Term.setColorMBFName(
+        ColorMU.Underline,
+        null,
+        ColorFU.BrightBlue,
+    );
     _ = try write_out.print("More text", .{});
     _ = Term.cursorDownB(null);
 
     std.time.sleep(2 * std.time.ns_per_s);
-    _ = Term.setColorMBFName(ColorMU{
-        .Reset = {},
-    }, null, null);
+    _ = Term.setColorMBFName(
+        ColorMU.Reset,
+        null,
+        null,
+    );
 }

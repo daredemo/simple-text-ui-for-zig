@@ -10,18 +10,10 @@ const Location = @import("Location.zig").Location;
 const Face = @import("Location.zig").Face;
 const FaceE = @import("Location.zig").FaceE;
 
-const TAL = TextAlign{
-    .Left = {},
-};
-const TAR = TextAlign{
-    .Right = {},
-};
-const TAC = TextAlign{
-    .Center = {},
-};
-const TAN = TextAlign{
-    .None = {},
-};
+const TAL = TextAlign.Left;
+const TAR = TextAlign.Right;
+const TAC = TextAlign.Center;
+const TAN = TextAlign.None;
 
 /// The direction of layout for children
 pub const Layout = enum {
@@ -30,15 +22,7 @@ pub const Layout = enum {
 };
 
 /// Vertical alignment for title
-pub const PositionTB_E = enum {
-    None,
-    Top,
-    Bottom,
-    Center,
-};
-
-/// Vertical alignment for title
-pub const PositionTB = union(PositionTB_E) {
+pub const PositionTB = enum {
     None,
     Top,
     Bottom,
@@ -175,7 +159,7 @@ pub const Panel = struct {
         const panel = allocator.create(Panel) catch unreachable;
         panel.* = Panel{
             .title = title,
-            .title_position = PositionTB{ .None = {} },
+            .title_position = PositionTB.None,
             .title_align = TAN,
             .anchor_x = 1,
             .anchor_y = 1,
@@ -205,7 +189,7 @@ pub const Panel = struct {
         const panel = allocator.create(Panel) catch unreachable;
         panel.* = Panel{
             .title = title,
-            .title_position = PositionTB{ .None = {} },
+            .title_position = PositionTB.None,
             .title_align = TAN,
             .parent = null,
             .anchor_x = 1,
@@ -667,7 +651,7 @@ pub const Panel = struct {
                             "",
                             ' ',
                             @as(usize, @abs(self.width)) - 2,
-                            TextAlign{ .Left = {} },
+                            TextAlign.Left,
                         );
                         _ = tl.textLine(t_line).draw();
                     }

@@ -11,9 +11,9 @@ const ColorF = ColorDef.ColorF;
 const ColorBU = ColorDef.ColorBU;
 const ColorFU = ColorDef.ColorFU;
 const ColorMU = ColorDef.ColorMU;
-const ColorBE = ColorDef.ColorBE;
-const ColorFE = ColorDef.ColorFE;
-const ColorME = ColorDef.ColorME;
+// const ColorBE = ColorDef.ColorBE;
+// const ColorFE = ColorDef.ColorFE;
+// const ColorME = ColorDef.ColorME;
 const ColorStype = ColorDef.ColorStyle;
 const TextLine = TLine.TextLine;
 
@@ -35,39 +35,35 @@ pub fn main() !void {
         _ = Term.enableCursor();
     }
     defer {
-        _ = Term.setColorMBFName(ColorMU{
-            .Reset = {},
-        }, null, null);
+        _ = Term.setColorMBFName(
+            ColorMU.Reset,
+            null,
+            null,
+        );
     }
     _ = Term.clearScreen();
-    var the_app = TheApp.init("Threaded App", 20, 15);
+    var the_app = TheApp.init(
+        "Threaded App",
+        20,
+        15,
+    );
     var tl_buffer: [512]u8 = undefined;
     const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
     var tl1 = TextLine.init(app_name);
-    _ = tl1.absXY(0, 1).bg(ColorB.initName(ColorBU{
-        .Blue = {},
-    })).fg(ColorF.initName(ColorFU{
-        .Black = {},
-    })).draw();
+    _ = tl1.absXY(0, 1).bg(ColorB.initName(ColorBU.Blue)).fg(ColorF.initName(ColorFU.Black)).draw();
     var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
     _ = tl2.absXY(0, 2).draw();
     var tl3 = TextLine.init("    \n");
-    _ = tl3.bg(ColorB.initName(ColorBU{
-        .White = {},
-    }));
+    _ = tl3.bg(ColorB.initName(ColorBU.White));
     _ = tl3.absXY(0, 3).draw();
     _ = tl3.absXY(0, 4).draw();
     _ = Term.cursorTo(6, 0);
-    _ = Term.setColorB(ColorB.initName(ColorBU{
-        .Reset = {},
-    }));
+    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
     var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
     defer thread_heartbeat.join();
     var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{&the_app});
     defer thread_inputs.join();
-    _ = Term.setColorB(ColorB.initName(ColorBU{
-        .Reset = {},
-    }));
+    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
@@ -188,12 +184,8 @@ const TheApp = struct {
         var tl_heart = TextLine.init("♥");
         var tl_buffer: [512]u8 = undefined;
         var tl_winsize = TextLine.init("");
-        _ = tl_heart.fg(ColorF.initName(ColorFU{
-            .Blue = {},
-        })).absXY(0, 5);
-        _ = tl_winsize.fg(ColorF.initName(ColorFU{
-            .Blue = {},
-        })).absXY(4, 5);
+        _ = tl_heart.fg(ColorF.initName(ColorFU.Blue)).absXY(0, 5);
+        _ = tl_winsize.fg(ColorF.initName(ColorFU.Blue)).absXY(4, 5);
         while (true) {
             {
                 self.mutex.lock();
@@ -218,9 +210,7 @@ const TheApp = struct {
                 _ = tl_winsize.textLine(wsize_str).draw();
                 _ = Term.eraseCEL();
 
-                _ = Term.setColorF(ColorF.initName(ColorFU{
-                    .Default = {},
-                }));
+                _ = Term.setColorF(ColorF.initName(ColorFU.Default));
                 _ = Term.cursorTo(6, 0);
             }
         }

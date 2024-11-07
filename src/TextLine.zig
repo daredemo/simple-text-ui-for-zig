@@ -1,5 +1,4 @@
 const std = @import("std");
-// const ColorDef = @import("Color.zig");
 const Term = @import("ansi_terminal.zig");
 
 const RGB = @import("Color.zig").RGB;
@@ -9,9 +8,6 @@ const ColorStyle = @import("Color.zig").ColorStyle;
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
 const ColorMU = @import("Color.zig").ColorMU;
-const ColorBE = @import("Color.zig").ColorBE;
-const ColorFE = @import("Color.zig").ColorFE;
-const ColorME = @import("Color.zig").ColorME;
 
 const w_out = std.io.getStdOut().writer();
 
@@ -90,14 +86,10 @@ pub const TextLine = struct {
     /// Set background color
     pub fn bg(self: *TextLine, col_bg: ColorB) *TextLine {
         const b_default = ColorB.initName(
-            ColorBU{
-                .Default = {},
-            },
+            ColorBU.Default,
         );
         const f_default = ColorF.initName(
-            ColorFU{
-                .Default = {},
-            },
+            ColorFU.Default,
         );
         var style = self.color orelse ColorStyle.init(
             b_default,
@@ -112,14 +104,10 @@ pub const TextLine = struct {
     /// Set foreground color
     pub fn fg(self: *TextLine, col_fg: ColorF) *TextLine {
         const b_default = ColorB.initName(
-            ColorBU{
-                .Default = {},
-            },
+            ColorBU.Default,
         );
         const f_default = ColorF.initName(
-            ColorFU{
-                .Default = {},
-            },
+            ColorFU.Default,
         );
         var style = self.color orelse ColorStyle.init(
             b_default,
@@ -134,14 +122,10 @@ pub const TextLine = struct {
     /// Set color mode
     pub fn md(self: *TextLine, mode: ColorMU) *TextLine {
         const b_default = ColorB.initName(
-            ColorBU{
-                .Default = {},
-            },
+            ColorBU.Default,
         );
         const f_default = ColorF.initName(
-            ColorFU{
-                .Default = {},
-            },
+            ColorFU.Default,
         );
         var style = self.color orelse ColorStyle.init(
             b_default,
@@ -154,11 +138,11 @@ pub const TextLine = struct {
     }
 
     pub fn draw(self: *TextLine) *TextLine {
-        const bu_default = ColorBU{ .Reset = {} };
-        const fu_default = ColorFU{ .Reset = {} };
+        const bu_default = ColorBU.Reset;
+        const fu_default = ColorFU.Reset;
         const b_default = ColorB.initName(bu_default);
         const f_default = ColorF.initName(fu_default);
-        const m_reset = ColorMU{ .Reset = {} };
+        const m_reset = ColorMU.Reset;
         const style = self.color orelse ColorStyle.init(
             b_default,
             f_default,

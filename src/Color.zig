@@ -13,29 +13,7 @@ pub const RGB = struct {
 };
 
 /// Foreground colors
-pub const ColorFE = enum {
-    Reset,
-    Black,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-    White,
-    Default,
-    BrightBlack,
-    BrightRed,
-    BrightGreen,
-    BrightYellow,
-    BrightBlue,
-    BrightMagenta,
-    BrightCyan,
-    BrightWhite,
-};
-
-/// Foreground colors
-pub const ColorFU = union(ColorFE) {
+pub const ColorFU = enum {
     Reset,
     Black,
     Red,
@@ -80,29 +58,7 @@ pub const ColorFU = union(ColorFE) {
 };
 
 /// Background colors
-pub const ColorBE = enum {
-    Reset,
-    Black,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-    White,
-    Default,
-    BrightBlack,
-    BrightRed,
-    BrightGreen,
-    BrightYellow,
-    BrightBlue,
-    BrightMagenta,
-    BrightCyan,
-    BrightWhite,
-};
-
-/// Background colors
-pub const ColorBU = union(ColorBE) {
+pub const ColorBU = enum {
     Reset,
     Black,
     Red,
@@ -147,28 +103,7 @@ pub const ColorBU = union(ColorBE) {
 };
 
 /// Color/Graphics modes
-pub const ColorME = enum {
-    Reset,
-    Bold,
-    Dim,
-    Italic,
-    Underline,
-    Blinking,
-    Inverse,
-    Hidden,
-    Strikethrough,
-    ResetBold,
-    ResetDim,
-    ResetItalic,
-    ResetUnderline,
-    ResetBlinking,
-    ResetInverse,
-    ResetHidden,
-    ResetStrikethrough,
-};
-
-/// Color/Graphics modes
-pub const ColorMU = union(ColorME) {
+pub const ColorMU = enum {
     Reset,
     Bold,
     Dim,

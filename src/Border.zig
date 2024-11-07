@@ -9,21 +9,7 @@ pub const BorderElements = struct {
     bottom_right: u21,
 };
 
-pub const BorderE = enum {
-    Default,
-    Retro,
-    Empty,
-    Light,
-    LightRound,
-    Heavy,
-    LightTripleDash,
-    HeavyTripleDash,
-    LightDoubleDash,
-    HeavyDoubleDash,
-    Double,
-};
-
-pub const BorderStyle = union(BorderE) {
+pub const BorderStyle = enum {
     Default,
     Retro,
     Empty,

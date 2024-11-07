@@ -3,13 +3,25 @@ const std = @import("std");
 const TextLine = @import("TextLine.zig").TextLine;
 const Border = @import("Border.zig").Border;
 const TextAlign = @import("StringStuff.zig").Alignment;
-const text_align = @import("StringStuff.zig").stringAlign;
+const stringAlign = @import("StringStuff.zig").stringAlign;
+const stringLen = @import("StringStuff.zig").stringLen;
 const Term = @import("ansi_terminal.zig");
+const Location = @import("Location.zig").Location;
+const Face = @import("Location.zig").Face;
+const FaceE = @import("Location.zig").FaceE;
 
-const TAL = TextAlign{ .Left = {} };
-const TAR = TextAlign{ .Right = {} };
-const TAC = TextAlign{ .Center = {} };
-const TAN = TextAlign{ .None = {} };
+const TAL = TextAlign{
+    .Left = {},
+};
+const TAR = TextAlign{
+    .Right = {},
+};
+const TAC = TextAlign{
+    .Center = {},
+};
+const TAN = TextAlign{
+    .None = {},
+};
 
 /// The direction of layout for children
 pub const Layout = enum {
@@ -32,6 +44,7 @@ pub const PositionTB = union(PositionTB_E) {
     Bottom,
     Center,
 
+    /// Get the numeric value of the position
     pub fn tag(self: PositionTB) u8 {
         return switch (self) {
             .None => 0,
@@ -42,18 +55,91 @@ pub const PositionTB = union(PositionTB_E) {
     }
 };
 
+/// Text element relative to the panel
 pub const RenderText = struct {
     parent: ?*Panel = undefined,
     text: *TextLine = undefined,
     next_text: ?*RenderText = null,
+
+    /// Draw RenderText items
     pub fn draw(self: *RenderText) void {
         if (self.parent != null) {
             const p = self.parent.?;
-            _ = self.text.parentXY(@as(u32, @abs(p.anchor_x)), @as(u32, @abs(p.anchor_y)));
+            _ = self.text.parentXY(
+                @as(u32, @abs(p.anchor_x)),
+                @as(u32, @abs(p.anchor_y)),
+            );
         }
         _ = self.text.draw();
         if (self.next_text != null) {
             _ = self.next_text.?.draw();
+        }
+    }
+};
+
+/// Element that repeats a "text" at an array of coordinates
+pub const RenderTextArray = struct {
+    parent: ?*Panel = undefined,
+    delta_x: i32 = 0,
+    delta_y: i32 = 0,
+    multi_x: i32 = 1, // size of the text, 1 => one char
+    multi_y: i32 = 1,
+    text: *TextLine = undefined,
+    text_first: ?*TextLine = null,
+    text_alt: ?*TextLine = null,
+    coordinates: *std.ArrayList(Location) = undefined,
+    next_array: ?*RenderTextArray = null,
+
+    /// Draw RenderTextArray items
+    pub fn draw(self: *RenderTextArray) void {
+        // _ = self;
+        if (self.parent != null) {
+            const p = self.parent.?;
+            _ = self.text.parentXY(
+                @as(u32, @abs(p.anchor_x)),
+                @as(u32, @abs(p.anchor_y)),
+            );
+        }
+        for (self.coordinates.items, 0..) |item, index| {
+            const p = self.parent.?;
+            const nx: i32 = item.x * self.multi_x + self.delta_x;
+            const ny: i32 = item.y * self.multi_y + self.delta_y;
+            if (index == 0) {
+                if (self.text_first != null) {
+                    _ = self.text_first.?.parentXY(
+                        @as(u32, @abs(p.anchor_x)),
+                        @as(u32, @abs(p.anchor_y)),
+                    );
+                    _ = self.text_first.?.relativeXY(
+                        nx,
+                        ny,
+                    );
+                    _ = self.text_first.?.draw();
+                } else {
+                    _ = self.text.parentXY(
+                        @as(u32, @abs(p.anchor_x)),
+                        @as(u32, @abs(p.anchor_y)),
+                    );
+                    _ = self.text.relativeXY(
+                        nx,
+                        ny,
+                    );
+                    _ = self.text.draw();
+                }
+            } else {
+                _ = self.text.parentXY(
+                    @as(u32, @abs(p.anchor_x)),
+                    @as(u32, @abs(p.anchor_y)),
+                );
+                _ = self.text.relativeXY(
+                    nx,
+                    ny,
+                );
+                _ = self.text.draw();
+            }
+        }
+        if (self.next_array != null) {
+            _ = self.next_array.?.draw();
         }
     }
 };
@@ -76,6 +162,7 @@ pub const Panel = struct {
     child_head: ?*Panel = undefined,
     sibling_next: ?*Panel = undefined,
     render_text_next: ?*RenderText = undefined,
+    render_array_next: ?*RenderTextArray = undefined,
     size_absolute: ?i32 = undefined,
     size_relative: ?f32 = undefined,
     border: ?Border = undefined,
@@ -197,7 +284,6 @@ pub const Panel = struct {
             var last_child = self.getLastText(current_child).?;
             last_child.next_text = the_child;
         }
-        // _ = self.draw();
         return self;
     }
 
@@ -211,6 +297,34 @@ pub const Panel = struct {
                 return theChild;
             } else {
                 return self.getLastText(theChild.next_text);
+            }
+        }
+    }
+
+    /// Add a new child to the end of children's list
+    pub fn appendArray(self: *Panel, child: *RenderTextArray) *Panel {
+        var the_child = child;
+        the_child.parent = self;
+        if (self.render_array_next == null) {
+            self.render_array_next = the_child;
+        } else {
+            const current_child = self.render_array_next.?;
+            var last_child = self.getLastArray(current_child).?;
+            last_child.next_array = the_child;
+        }
+        return self;
+    }
+
+    /// Find the last child of the current panel
+    pub fn getLastArray(self: *Panel, child: ?*RenderTextArray) ?*RenderTextArray {
+        if (child == null) {
+            return null;
+        } else {
+            const theChild = child.?;
+            if (theChild.next_array == null) {
+                return theChild;
+            } else {
+                return self.getLastArray(theChild.next_array);
             }
         }
     }
@@ -333,11 +447,7 @@ pub const Panel = struct {
                     const w: i32 = @as(i32, @intFromFloat(@as(f32, @floatFromInt(p_w)) * self.size_relative.? / sum_r));
                     self.width = w;
                 }
-                // else {
-                //         self.width = self.parent.?.width;
-                //     }
             }
-            // }
             if (self.sibling_next != null) {
                 var bx: i32 = 0;
                 var by: i32 = 0;
@@ -386,7 +496,10 @@ pub const Panel = struct {
                 var tl_buffer_2: [512]u8 = undefined;
                 var tl_buffer_3: [512]u8 = undefined;
                 var tl = TextLine.init("");
-                _ = tl.absXY(@abs(self.anchor_x), @abs(self.anchor_y) + @as(u32, @intCast(row)));
+                _ = tl.absXY(
+                    @abs(self.anchor_x),
+                    @abs(self.anchor_y) + @as(u32, @intCast(row)),
+                );
                 if (self.border != null) {
                     const border = self.border.?;
                     const b_t = border.top orelse ' ';
@@ -399,47 +512,173 @@ pub const Panel = struct {
                     const b_br = border.bottom_right orelse ' ';
                     if (row == 0) {
                         if ((self.title != null) and (self.title_position.tag() == 1)) {
-                            const ts = text_align(&tl_buffer_1, self.title.?, ' ', self.title.?.len + 2, TAC);
-                            const ts1 = text_align(&tl_buffer_2, ts, b_t, ts.len + 2, TAC);
-                            const ts2 = text_align(&tl_buffer_3, ts1, b_t, @as(usize, @abs(self.width)) - 2, self.title_align);
-                            const ts3 = text_align(&tl_buffer_1, ts2, b_tl, @as(usize, @abs(self.width)) - 1, TAR);
-                            const ts4 = text_align(&tl_buffer_2, ts3, b_tr, @as(usize, @abs(self.width)), TAL);
+                            const title_len = stringLen(self.title.?);
+                            const ts = stringAlign(
+                                &tl_buffer_1,
+                                self.title.?,
+                                ' ',
+                                title_len + 2,
+                                TAC,
+                            );
+                            const ts1 = stringAlign(
+                                &tl_buffer_2,
+                                ts,
+                                b_t,
+                                title_len + 4,
+                                TAC,
+                            );
+                            const ts2 = stringAlign(
+                                &tl_buffer_3,
+                                ts1,
+                                b_t,
+                                @as(usize, @abs(self.width)) - 2,
+                                self.title_align,
+                            );
+                            const ts3 = stringAlign(
+                                &tl_buffer_1,
+                                ts2,
+                                b_tl,
+                                @as(usize, @abs(self.width)) - 1,
+                                TAR,
+                            );
+                            const ts4 = stringAlign(
+                                &tl_buffer_2,
+                                ts3,
+                                b_tr,
+                                @as(usize, @abs(self.width)),
+                                TAL,
+                            );
                             _ = tl.textLine(ts4).draw();
                         } else {
-                            const ts2 = text_align(&tl_buffer_3, "", b_t, @as(usize, @abs(self.width)) - 2, self.title_align);
-                            const ts3 = text_align(&tl_buffer_1, ts2, b_tl, @as(usize, @abs(self.width)) - 1, TAR);
-                            const ts4 = text_align(&tl_buffer_2, ts3, b_tr, @as(usize, @abs(self.width)), TAL);
+                            const ts2 = stringAlign(
+                                &tl_buffer_3,
+                                "",
+                                b_t,
+                                @as(usize, @abs(self.width)) - 2,
+                                self.title_align,
+                            );
+                            const ts3 = stringAlign(
+                                &tl_buffer_1,
+                                ts2,
+                                b_tl,
+                                @as(usize, @abs(self.width)) - 1,
+                                TAR,
+                            );
+                            const ts4 = stringAlign(
+                                &tl_buffer_2,
+                                ts3,
+                                b_tr,
+                                @as(usize, @abs(self.width)),
+                                TAL,
+                            );
                             _ = tl.textLine(ts4).draw();
                         }
                     } else if (row == self.height - 1) {
                         if ((self.title != null) and (self.title_position.tag() == 2)) {
-                            const ts = text_align(&tl_buffer_1, self.title.?, ' ', self.title.?.len + 2, TAC);
-                            const ts1 = text_align(&tl_buffer_2, ts, b_b, ts.len + 2, TAC);
-                            const ts2 = text_align(&tl_buffer_3, ts1, b_b, @as(usize, @abs(self.width)) - 2, self.title_align);
-                            const ts3 = text_align(&tl_buffer_1, ts2, b_bl, @as(usize, @abs(self.width)) - 1, TAR);
-                            const ts4 = text_align(&tl_buffer_2, ts3, b_br, @as(usize, @abs(self.width)), TAL);
+                            const title_len = stringLen(self.title.?);
+                            const ts = stringAlign(
+                                &tl_buffer_1,
+                                self.title.?,
+                                ' ',
+                                title_len + 2,
+                                TAC,
+                            );
+                            const ts1 = stringAlign(
+                                &tl_buffer_2,
+                                ts,
+                                b_b,
+                                title_len + 4,
+                                TAC,
+                            );
+                            const ts2 = stringAlign(
+                                &tl_buffer_3,
+                                ts1,
+                                b_b,
+                                @as(usize, @abs(self.width)) - 2,
+                                self.title_align,
+                            );
+                            const ts3 = stringAlign(
+                                &tl_buffer_1,
+                                ts2,
+                                b_bl,
+                                @as(usize, @abs(self.width)) - 1,
+                                TAR,
+                            );
+                            const ts4 = stringAlign(
+                                &tl_buffer_2,
+                                ts3,
+                                b_br,
+                                @as(usize, @abs(self.width)),
+                                TAL,
+                            );
                             _ = tl.textLine(ts4).draw();
                         } else {
-                            const ts2 = text_align(&tl_buffer_3, "", b_b, @as(usize, @abs(self.width)) - 2, self.title_align);
-                            const ts3 = text_align(&tl_buffer_1, ts2, b_bl, @as(usize, @abs(self.width)) - 1, TAR);
-                            const ts4 = text_align(&tl_buffer_2, ts3, b_br, @as(usize, @abs(self.width)), TAL);
+                            const ts2 = stringAlign(
+                                &tl_buffer_3,
+                                "",
+                                b_b,
+                                @as(usize, @abs(self.width)) - 2,
+                                self.title_align,
+                            );
+                            const ts3 = stringAlign(
+                                &tl_buffer_1,
+                                ts2,
+                                b_bl,
+                                @as(usize, @abs(self.width)) - 1,
+                                TAR,
+                            );
+                            const ts4 = stringAlign(
+                                &tl_buffer_2,
+                                ts3,
+                                b_br,
+                                @as(usize, @abs(self.width)),
+                                TAL,
+                            );
                             _ = tl.textLine(ts4).draw();
                         }
                     } else {
-                        const ts2 = text_align(&tl_buffer_3, "", ' ', @as(usize, @abs(self.width)) - 2, self.title_align);
-                        const ts3 = text_align(&tl_buffer_1, ts2, b_l, @as(usize, @abs(self.width)) - 1, TAR);
-                        const ts4 = text_align(&tl_buffer_2, ts3, b_r, @as(usize, @abs(self.width)), TAL);
+                        const ts2 = stringAlign(
+                            &tl_buffer_3,
+                            "",
+                            ' ',
+                            @as(usize, @abs(self.width)) - 2,
+                            self.title_align,
+                        );
+                        const ts3 = stringAlign(
+                            &tl_buffer_1,
+                            ts2,
+                            b_l,
+                            @as(usize, @abs(self.width)) - 1,
+                            TAR,
+                        );
+                        const ts4 = stringAlign(
+                            &tl_buffer_2,
+                            ts3,
+                            b_r,
+                            @as(usize, @abs(self.width)),
+                            TAL,
+                        );
                         _ = tl.textLine(ts4).draw();
                     }
                 } else {
                     if (self.parent != null) {
-                        const t_line = text_align(&tl_buffer_1, "", ' ', @as(usize, @abs(self.width)) - 2, TextAlign{ .Left = {} });
+                        const t_line = stringAlign(
+                            &tl_buffer_1,
+                            "",
+                            ' ',
+                            @as(usize, @abs(self.width)) - 2,
+                            TextAlign{ .Left = {} },
+                        );
                         _ = tl.textLine(t_line).draw();
                     }
                 }
             }
             if (self.render_text_next != null) {
                 const r_text = self.render_text_next.?;
+                _ = r_text.draw();
+            }
+            if (self.render_array_next != null) {
+                const r_text = self.render_array_next.?;
                 _ = r_text.draw();
             }
         }

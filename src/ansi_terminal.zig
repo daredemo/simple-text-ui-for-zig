@@ -72,75 +72,103 @@ pub fn cursorHome() void {
 
 /// Move cursor to a given location
 pub fn cursorTo(line: u32, column: u32) void {
-    _ = write_out.print("\x1B[{d};{d}H", .{
-        line,
-        column,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d};{d}H",
+        .{
+            line,
+            column,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor up n lines
 pub fn cursorUp(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}A", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}A",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor down n lines
 pub fn cursorDown(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}B", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}B",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor right n columns
 pub fn cursorRight(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}C", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}C",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor left n columns
 pub fn cursorLeft(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}D", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}D",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor to beginning of next line, n lines down
 pub fn cursorDownB(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}E", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}E",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor to beginning of next line, n lines up
 pub fn cursorUpB(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}F", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}F",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 /// Move cursor to column n
 pub fn cursorColumn(n: ?u32) void {
     const N = n orelse 1;
-    _ = write_out.print("\x1B[{d}G", .{
-        N,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}G",
+        .{
+            N,
+        },
+    ) catch unreachable;
 }
 
 pub fn setColorStyle(style: ColorDef.ColorStyle) void {
-    const colorB = style.bg orelse ColorDef.ColorB.initName(ColorDef.ColorBU{
-        .Default = {},
-    });
-    const colorF = style.fg orelse ColorDef.ColorF.initName(ColorDef.ColorFU{
-        .Default = {},
-    });
+    const colorB = style.bg orelse ColorDef.ColorB.initName(
+        ColorDef.ColorBU{
+            .Default = {},
+        },
+    );
+    const colorF = style.fg orelse ColorDef.ColorF.initName(
+        ColorDef.ColorFU{
+            .Default = {},
+        },
+    );
     if (style.md != null) {
         const mode = style.md orelse ColorDef.ColorMU{
             .Reset = {},
@@ -168,8 +196,16 @@ pub fn setColorF(color: ColorDef.ColorF) void {
             _ = setColorFV(v);
         },
         2 => {
-            const rgb = color.rgb orelse ColorDef.RGB.init(0, 0, 0);
-            _ = setColorFRGB(rgb.r, rgb.g, rgb.b);
+            const rgb = color.rgb orelse ColorDef.RGB.init(
+                0,
+                0,
+                0,
+            );
+            _ = setColorFRGB(
+                rgb.r,
+                rgb.g,
+                rgb.b,
+            );
         },
         else => {},
     }
@@ -188,45 +224,68 @@ pub fn setColorB(color: ColorDef.ColorB) void {
             _ = setColorBV(v);
         },
         2 => {
-            const rgb = color.rgb orelse ColorDef.RGB.init(0, 0, 0);
-            _ = setColorBRGB(rgb.r, rgb.g, rgb.b);
+            const rgb = color.rgb orelse ColorDef.RGB.init(
+                0,
+                0,
+                0,
+            );
+            _ = setColorBRGB(
+                rgb.r,
+                rgb.g,
+                rgb.b,
+            );
         },
         else => {},
     }
 }
 
 pub fn setColorMD(mode: ColorDef.ColorMU) void {
-    _ = write_out.print("\x1B[{d}m", .{
-        mode.tag(),
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{d}m",
+        .{
+            mode.tag(),
+        },
+    ) catch unreachable;
 }
 
 /// Set foreground color of text by value
 pub fn setColorFV(color: u8) void {
-    _ = write_out.print("\x1B[38;5;{}m", .{
-        color,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[38;5;{}m",
+        .{
+            color,
+        },
+    ) catch unreachable;
 }
 
 /// Set background color of text by value
 pub fn setColorBV(color: u8) void {
-    _ = write_out.print("\x1B[48;5;{}m", .{
-        color,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[48;5;{}m",
+        .{
+            color,
+        },
+    ) catch unreachable;
 }
 
 /// Set foreground color of text by name
 pub fn setColorFName(color: ColorDef.ColorFU) void {
-    _ = write_out.print("\x1B[{}m", .{
-        color.tag(),
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{}m",
+        .{
+            color.tag(),
+        },
+    ) catch unreachable;
 }
 
 /// Set background color of text by name
 pub fn setColorBName(color: ColorDef.ColorBU) void {
-    _ = write_out.print("\x1B[{}m", .{
-        color.tag(),
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{}m",
+        .{
+            color.tag(),
+        },
+    ) catch unreachable;
 }
 
 /// Set both background and foreground color of text by name
@@ -237,10 +296,13 @@ pub fn setColorBFName(colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void
     const F = colorF orelse ColorDef.ColorFU{
         .Default = {},
     };
-    _ = write_out.print("\x1B[{};{}m", .{
-        F.tag(),
-        B.tag(),
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{};{}m",
+        .{
+            F.tag(),
+            B.tag(),
+        },
+    ) catch unreachable;
 }
 
 /// Set style of text using color mode, background and foreground by name
@@ -251,11 +313,14 @@ pub fn setColorMBFName(colorM: ColorDef.ColorMU, colorB: ?ColorDef.ColorBU, colo
     const F = colorF orelse ColorDef.ColorFU{
         .Default = {},
     };
-    _ = write_out.print("\x1B[{};{};{}m", .{
-        colorM.tag(),
-        F.tag(),
-        B.tag(),
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[{};{};{}m",
+        .{
+            colorM.tag(),
+            F.tag(),
+            B.tag(),
+        },
+    ) catch unreachable;
 }
 
 /// Set foreground color of text using RGB value
@@ -263,11 +328,14 @@ pub fn setColorFRGB(r: ?u8, g: ?u8, b: ?u8) void {
     const R = r orelse 0;
     const G = g orelse 0;
     const B = b orelse 0;
-    _ = write_out.print("\x1B[38;2;{};{};{}m", .{
-        R,
-        G,
-        B,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[38;2;{};{};{}m",
+        .{
+            R,
+            G,
+            B,
+        },
+    ) catch unreachable;
 }
 
 /// Set background color of text by RGB value
@@ -275,9 +343,12 @@ pub fn setColorBRGB(r: ?u8, g: ?u8, b: ?u8) void {
     const R = r orelse 0;
     const G = g orelse 0;
     const B = b orelse 0;
-    _ = write_out.print("\x1B[48;2;{};{};{}m", .{
-        R,
-        G,
-        B,
-    }) catch unreachable;
+    _ = write_out.print(
+        "\x1B[48;2;{};{};{}m",
+        .{
+            R,
+            G,
+            B,
+        },
+    ) catch unreachable;
 }

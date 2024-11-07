@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) !void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    const strip_debugging = (b.option(bool, "strip", "strip debugging symbols") orelse false);
+    const strip_debugging = b.option(bool, "strip", "strip debugging symbols") orelse false;
 
     const lib = b.addStaticLibrary(.{
         .name = "terminal",
@@ -44,9 +44,10 @@ pub fn build(b: *std.Build) !void {
         // const example_files: [1][]const u8 = .{"src/ex_read_input_from_term.zig"};
         // const example_files: [2][]const u8 = .{ "src/ex_read_input_from_term.zig", "src/ex_multi_threaded.zig" };
         const example_files: [3][]const u8 = .{ "src/ex_read_input_from_term.zig", "src/ex_multi_threaded.zig", "src/ex_panels.zig" };
-        for (example_files, 0..) |ex, index| {
+        const example_names: [3][]const u8 = .{ "simple_text_input", "simple_multi_threaded", "panels_frames" };
+        for (example_files, example_names, 0..) |ex, name, index| {
             var ex_buffer: [512]u8 = undefined;
-            const ex_name = try std.fmt.bufPrint(&ex_buffer, "example_{}", .{index});
+            const ex_name = try std.fmt.bufPrint(&ex_buffer, "{}_example_{s}", .{ index, name });
             const examples = b.addExecutable(.{
                 .name = ex_name,
                 .root_source_file = b.path(ex),

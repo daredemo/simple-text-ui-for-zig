@@ -87,7 +87,7 @@ const TheApp = struct {
     height: u8,
 
     pub fn init(the_name: []const u8, width: u8, height: u8) TheApp {
-        return .{
+        return TheApp{
             .name = the_name,
             .is_running = true,
             .heart_beat = false,

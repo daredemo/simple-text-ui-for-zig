@@ -119,7 +119,7 @@ const TheApp = struct {
     root_panel: *Panel = undefined,
 
     pub fn init(the_name: []const u8, root_panel: *Panel, width: u8, height: u8) TheApp {
-        return .{
+        return TheApp{
             .name = the_name,
             .is_running = true,
             .heart_beat = false,

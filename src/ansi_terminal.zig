@@ -160,19 +160,13 @@ pub fn cursorColumn(n: ?u32) void {
 
 pub fn setColorStyle(style: ColorDef.ColorStyle) void {
     const colorB = style.bg orelse ColorDef.ColorB.initName(
-        ColorDef.ColorBU{
-            .Default = {},
-        },
+        ColorDef.ColorBU.Default,
     );
     const colorF = style.fg orelse ColorDef.ColorF.initName(
-        ColorDef.ColorFU{
-            .Default = {},
-        },
+        ColorDef.ColorFU.Default,
     );
     if (style.md != null) {
-        const mode = style.md orelse ColorDef.ColorMU{
-            .Reset = {},
-        };
+        const mode = style.md orelse ColorDef.ColorMU.Reset;
         _ = setColorMD(mode);
     }
     _ = setColorBF(colorB, colorF);
@@ -186,9 +180,7 @@ pub fn setColorBF(colorB: ColorDef.ColorB, colorF: ColorDef.ColorF) void {
 pub fn setColorF(color: ColorDef.ColorF) void {
     switch (color.type_data.tag()) {
         0 => {
-            const name = color.name orelse ColorDef.ColorFU{
-                .Default = {},
-            };
+            const name = color.name orelse ColorDef.ColorFU.Default;
             _ = setColorFName(name);
         },
         1 => {
@@ -214,9 +206,7 @@ pub fn setColorF(color: ColorDef.ColorF) void {
 pub fn setColorB(color: ColorDef.ColorB) void {
     switch (color.type_data.tag()) {
         0 => {
-            const name = color.name orelse ColorDef.ColorBU{
-                .Default = {},
-            };
+            const name = color.name orelse ColorDef.ColorBU.Default;
             _ = setColorBName(name);
         },
         1 => {
@@ -290,12 +280,8 @@ pub fn setColorBName(color: ColorDef.ColorBU) void {
 
 /// Set both background and foreground color of text by name
 pub fn setColorBFName(colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void {
-    const B = colorB orelse ColorDef.ColorBU{
-        .Default = {},
-    }; // ColorBackground.Default;
-    const F = colorF orelse ColorDef.ColorFU{
-        .Default = {},
-    };
+    const B = colorB orelse ColorDef.ColorBU.Default; // ColorBackground.Default;
+    const F = colorF orelse ColorDef.ColorFU.Default;
     _ = write_out.print(
         "\x1B[{};{}m",
         .{
@@ -307,12 +293,8 @@ pub fn setColorBFName(colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void
 
 /// Set style of text using color mode, background and foreground by name
 pub fn setColorMBFName(colorM: ColorDef.ColorMU, colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void {
-    const B = colorB orelse ColorDef.ColorBU{
-        .Default = {},
-    };
-    const F = colorF orelse ColorDef.ColorFU{
-        .Default = {},
-    };
+    const B = colorB orelse ColorDef.ColorBU.Default;
+    const F = colorF orelse ColorDef.ColorFU.Default;
     _ = write_out.print(
         "\x1B[{};{};{}m",
         .{

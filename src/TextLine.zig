@@ -137,6 +137,11 @@ pub const TextLine = struct {
         return self;
     }
 
+    pub fn setColor(self: *TextLine, color: ?ColorStyle) *TextLine {
+        self.color = color;
+        return self;
+    }
+
     pub fn draw(self: *TextLine) *TextLine {
         const bu_default = ColorBU.Reset;
         const fu_default = ColorFU.Reset;
@@ -163,10 +168,14 @@ pub const TextLine = struct {
                 px + @abs(rx),
             );
         }
-        _ = Term.setColorBF(
-            style.bg.?,
-            style.fg.?,
-        );
+        if (style.md == null) {
+            _ = Term.setColorBF(
+                style.bg.?,
+                style.fg.?,
+            );
+        } else {
+            _ = Term.setColorStyle(style);
+        }
         if (self.text != null) {
             _ = w_out.print(
                 "{s}",

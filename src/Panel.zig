@@ -137,6 +137,8 @@ pub const Panel = struct {
     anchor_y: i32 = undefined,
     parent_width: *i32 = undefined,
     parent_height: *i32 = undefined,
+    full_width: *i32 = undefined,
+    full_height: *i32 = undefined,
     width: i32 = undefined,
     height: i32 = undefined,
     minimum_width: i32 = undefined,
@@ -168,6 +170,8 @@ pub const Panel = struct {
             .allocator = allocator,
             .parent_width = &parent.width,
             .parent_height = &parent.height,
+            .full_width = &parent.width,
+            .full_height = &parent.height,
             .minimum_width = @as(i32, 12),
             .minimum_height = @as(i32, 4),
             .width = @as(i32, 0),
@@ -198,6 +202,8 @@ pub const Panel = struct {
             .allocator = allocator,
             .parent_width = parent_w,
             .parent_height = parent_h,
+            .full_width = parent_w,
+            .full_height = parent_h,
             .minimum_width = @as(i32, 12),
             .minimum_height = @as(i32, 4),
             .width = @as(i32, 0),
@@ -225,6 +231,8 @@ pub const Panel = struct {
     /// Add a new child to the end of children's list
     pub fn appendChild(self: *Panel, child: *Panel, absolute_size: ?i32, relative_size: ?f32) *Panel {
         var the_child = child;
+        the_child.full_width = self.full_width;
+        the_child.full_height = self.full_height;
         the_child.size_absolute = absolute_size;
         the_child.size_relative = relative_size;
         const s_abs = absolute_size orelse 0;
@@ -365,7 +373,12 @@ pub const Panel = struct {
                     self.width = p.width;
                 }
                 if (self.size_absolute != null) {
-                    self.height = self.size_absolute.?;
+                    // TODO:
+                    if ((self.anchor_y + self.size_absolute.?) <= self.full_height.*) {
+                        self.height = self.size_absolute.?;
+                    } else {
+                        self.height = 0;
+                    }
                 } else if (self.size_relative != null) {
                     var sum_a: i32 = 0;
                     for (p.ch_sizes_absolute.items) |item| {
@@ -405,7 +418,12 @@ pub const Panel = struct {
                     self.height = p.height;
                 }
                 if (self.size_absolute != null) {
-                    self.width = self.size_absolute.?;
+                    // TODO:
+                    if ((self.anchor_x + self.size_absolute.?) <= self.full_width.*) {
+                        self.width = self.size_absolute.?;
+                    } else {
+                        self.width = 0;
+                    }
                 } else if (self.size_relative != null) {
                     var sum_a: i32 = 0;
                     for (p.ch_sizes_absolute.items) |item| {
@@ -485,6 +503,7 @@ pub const Panel = struct {
                     @abs(self.anchor_y) + @as(u32, @intCast(row)),
                 );
                 if (self.border != null) {
+                    _ = tl.setColor(self.border.?.color);
                     const border = self.border.?;
                     const b_t = border.top orelse ' ';
                     const b_b = border.bottom orelse ' ';

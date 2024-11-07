@@ -1,4 +1,5 @@
 const std = @import("std");
+const ColorStyle = @import("Color.zig").ColorStyle;
 
 pub const BorderElements = struct {
     horizontal: u21,
@@ -126,6 +127,7 @@ pub const Border = struct {
     top_right: ?u21 = undefined,
     bottom_left: ?u21 = undefined,
     bottom_right: ?u21 = undefined,
+    color: ?ColorStyle = undefined,
 
     /// Initialize as borderless
     pub fn init(allocator: *std.mem.Allocator) *Border {
@@ -141,6 +143,11 @@ pub const Border = struct {
             .bottom_right = null,
         };
         return border;
+    }
+
+    pub fn setColor(self: *Border, color: ColorStyle) *Border {
+        self.color = color;
+        return self;
     }
 
     pub fn setTop(self: *Border, v: ?u21) *Border {

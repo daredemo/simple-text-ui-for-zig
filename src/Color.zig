@@ -103,47 +103,68 @@ pub const ColorBU = enum {
 };
 
 /// Color/Graphics modes
-pub const ColorMU = enum {
-    Reset,
-    Bold,
-    Dim,
-    Italic,
-    Underline,
-    Blinking,
-    Inverse,
-    Hidden,
-    Strikethrough,
-    ResetBold,
-    ResetDim,
-    ResetItalic,
-    ResetUnderline,
-    ResetBlinking,
-    ResetInverse,
-    ResetHidden,
-    ResetStrikethrough,
-
-    pub fn tag(self: ColorMU) u8 {
-        return switch (self) {
-            .Reset => 0,
-            .Bold => 1,
-            .Dim => 2,
-            .Italic => 3,
-            .Underline => 4,
-            .Blinking => 5,
-            .Inverse => 7,
-            .Hidden => 8,
-            .Strikethrough => 9,
-            .ResetBold => 22,
-            .ResetDim => 22,
-            .ResetItalic => 23,
-            .ResetUnderline => 24,
-            .ResetBlinking => 25,
-            .ResetInverse => 27,
-            .ResetHidden => 28,
-            .ResetStrikethrough => 29,
-        };
-    }
+pub const ColorModes = struct {
+    Reset: bool = false,
+    Bold: bool = false,
+    Dim: bool = false,
+    Italic: bool = false,
+    Underline: bool = false,
+    Blinking: bool = false,
+    Inverse: bool = false,
+    Hidden: bool = false,
+    Strikethrough: bool = false,
+    ResetBold: bool = false,
+    ResetDim: bool = false,
+    ResetItalic: bool = false,
+    ResetUnderline: bool = false,
+    ResetBlinking: bool = false,
+    ResetInverse: bool = false,
+    ResetHidden: bool = false,
+    ResetStrikethrough: bool = false,
 };
+
+/// Color/Graphics modes
+// pub const ColorMU = enum {
+//     Reset,
+//     Bold,
+//     Dim,
+//     Italic,
+//     Underline,
+//     Blinking,
+//     Inverse,
+//     Hidden,
+//     Strikethrough,
+//     ResetBold,
+//     ResetDim,
+//     ResetItalic,
+//     ResetUnderline,
+//     ResetBlinking,
+//     ResetInverse,
+//     ResetHidden,
+//     ResetStrikethrough,
+//
+//     pub fn tag(self: ColorMU) u8 {
+//         return switch (self) {
+//             .Reset => 0,
+//             .Bold => 1,
+//             .Dim => 2,
+//             .Italic => 3,
+//             .Underline => 4,
+//             .Blinking => 5,
+//             .Inverse => 7,
+//             .Hidden => 8,
+//             .Strikethrough => 9,
+//             .ResetBold => 22,
+//             .ResetDim => 22,
+//             .ResetItalic => 23,
+//             .ResetUnderline => 24,
+//             .ResetBlinking => 25,
+//             .ResetInverse => 27,
+//             .ResetHidden => 28,
+//             .ResetStrikethrough => 29,
+//         };
+//     }
+// };
 
 pub const ColorU = union(enum) {
     name,
@@ -242,13 +263,17 @@ pub const ColorF = struct {
 pub const ColorStyle = struct {
     bg: ?ColorB = undefined,
     fg: ?ColorF = undefined,
-    md: ?ColorMU = undefined,
+    modes: ?ColorModes = undefined,
 
-    pub fn init(bg: ?ColorB, fg: ?ColorF, md: ?ColorMU) ColorStyle {
+    pub fn init(
+        bg: ?ColorB,
+        fg: ?ColorF,
+        modes: ?ColorModes,
+    ) ColorStyle {
         return ColorStyle{
             .bg = bg,
             .fg = fg,
-            .md = md,
+            .modes = modes,
         };
     }
 };

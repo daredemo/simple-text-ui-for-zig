@@ -2,7 +2,6 @@ const std = @import("std");
 
 const ChRead = @import("CharReader.zig");
 const Term = @import("ansi_terminal.zig");
-// const TLine = @import("TextLine.zig");
 const libdef = @import("definitions.zig");
 const string_stuff = @import("StringStuff.zig");
 const Border = @import("Border.zig");
@@ -11,21 +10,15 @@ const ColorB = @import("Color.zig").ColorB;
 const ColorF = @import("Color.zig").ColorF;
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
-const ColorMU = @import("Color.zig").ColorMU;
-// const ColorBE = @import("Color.zig").ColorBE;
-// const ColorFE = @import("Color.zig").ColorFE;
-// const ColorME = @import("Color.zig").ColorME;
-const ColorStype = @import("Color.zig").ColorStyle;
+const ColorStyle = @import("Color.zig").ColorStyle;
+const ColorModes = @import("Color.zig").ColorModes;
 const TextLine = @import("TextLine.zig").TextLine;
 const Panel = @import("Panel.zig").Panel;
 const Layout = @import("Panel.zig").Layout;
 const RenderText = @import("Panel.zig").RenderText;
 const TitlePosition = @import("Panel.zig").PositionTB;
-// const StrAE = string_stuff.AlignmentE;
 const StrAU = string_stuff.Alignment;
 const stringAlign = string_stuff.stringAlign;
-
-// const write_out = std.io.getStdOut().writer();
 
 pub fn main() !void {
     libdef.handleSigwinch(0);
@@ -43,10 +36,12 @@ pub fn main() !void {
         _ = Term.enableCursor();
     }
     defer {
-        _ = Term.setColorMBFName(
-            ColorMU.Reset,
-            null,
-            null,
+        _ = Term.setColorStyle(
+            ColorStyle{
+                .bg = null,
+                .fg = null,
+                .modes = ColorModes{ .Reset = true },
+            },
         );
     }
     _ = Term.clearScreen();
@@ -121,8 +116,6 @@ const TheApp = struct {
 
     pub fn getInputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
-        // var tl_input = TextLine.init(" ");
-        // _ = tl_input.absXY(0, 8);
         while (true) {
             {
                 self.mutex.lock();
@@ -242,9 +235,6 @@ const TheApp = struct {
                 }
                 _ = Term.setColorF(ColorF.initName(ColorFU.Default));
             }
-            // _ = self.root_panel.update();
-            // _ = tl_heart.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
-            // _ = tl_panelinfo.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
             _ = self.root_panel.draw();
         }
     }

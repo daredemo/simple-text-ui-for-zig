@@ -10,11 +10,8 @@ const ColorB = ColorDef.ColorB;
 const ColorF = ColorDef.ColorF;
 const ColorBU = ColorDef.ColorBU;
 const ColorFU = ColorDef.ColorFU;
-const ColorMU = ColorDef.ColorMU;
-// const ColorBE = ColorDef.ColorBE;
-// const ColorFE = ColorDef.ColorFE;
-// const ColorME = ColorDef.ColorME;
-const ColorStype = ColorDef.ColorStyle;
+const ColorStyle = ColorDef.ColorStyle;
+const ColorModes = ColorDef.ColorModes;
 const TextLine = TLine.TextLine;
 
 const write_out = std.io.getStdOut().writer();
@@ -35,10 +32,12 @@ pub fn main() !void {
         _ = Term.enableCursor();
     }
     defer {
-        _ = Term.setColorMBFName(
-            ColorMU.Reset,
-            null,
-            null,
+        _ = Term.setColorStyle(
+            ColorStyle{
+                .fg = null,
+                .bg = null,
+                .modes = ColorModes{ .Reset = true },
+            },
         );
     }
     _ = Term.clearScreen();

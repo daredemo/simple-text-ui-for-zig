@@ -165,9 +165,9 @@ pub fn setColorStyle(style: ColorDef.ColorStyle) void {
     const colorF = style.fg orelse ColorDef.ColorF.initName(
         ColorDef.ColorFU.Default,
     );
-    if (style.md != null) {
-        const mode = style.md orelse ColorDef.ColorMU.Reset;
-        _ = setColorMD(mode);
+    if (style.modes != null) {
+        const modes = style.modes.?;
+        _ = setColorModes(modes);
     }
     _ = setColorBF(colorB, colorF);
 }
@@ -229,13 +229,55 @@ pub fn setColorB(color: ColorDef.ColorB) void {
     }
 }
 
-pub fn setColorMD(mode: ColorDef.ColorMU) void {
-    _ = write_out.print(
-        "\x1B[{d}m",
-        .{
-            mode.tag(),
-        },
-    ) catch unreachable;
+pub fn setColorModes(modes: ColorDef.ColorModes) void {
+    if (modes.Bold) {
+        _ = write_out.print("\x1B[1m", .{}) catch unreachable;
+    }
+    if (modes.Dim) {
+        _ = write_out.print("\x1B[2m", .{}) catch unreachable;
+    }
+    if (modes.Italic) {
+        _ = write_out.print("\x1B[3m", .{}) catch unreachable;
+    }
+    if (modes.Underline) {
+        _ = write_out.print("\x1B[4m", .{}) catch unreachable;
+    }
+    if (modes.Blinking) {
+        _ = write_out.print("\x1B[5m", .{}) catch unreachable;
+    }
+    if (modes.Inverse) {
+        _ = write_out.print("\x1B[7m", .{}) catch unreachable;
+    }
+    if (modes.Hidden) {
+        _ = write_out.print("\x1B[8m", .{}) catch unreachable;
+    }
+    if (modes.Strikethrough) {
+        _ = write_out.print("\x1B[9m", .{}) catch unreachable;
+    }
+    if (modes.ResetDim or modes.ResetBold) {
+        _ = write_out.print("\x1B[22m", .{}) catch unreachable;
+    }
+    if (modes.ResetItalic) {
+        _ = write_out.print("\x1B[23m", .{}) catch unreachable;
+    }
+    if (modes.ResetUnderline) {
+        _ = write_out.print("\x1B[24m", .{}) catch unreachable;
+    }
+    if (modes.ResetBlinking) {
+        _ = write_out.print("\x1B[25m", .{}) catch unreachable;
+    }
+    if (modes.ResetInverse) {
+        _ = write_out.print("\x1B[27m", .{}) catch unreachable;
+    }
+    if (modes.ResetHidden) {
+        _ = write_out.print("\x1B[28m", .{}) catch unreachable;
+    }
+    if (modes.ResetStrikethrough) {
+        _ = write_out.print("\x1B[29m", .{}) catch unreachable;
+    }
+    if (modes.Reset) {
+        _ = write_out.print("\x1B[0m", .{}) catch unreachable;
+    }
 }
 
 /// Set foreground color of text by value
@@ -285,20 +327,6 @@ pub fn setColorBFName(colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void
     _ = write_out.print(
         "\x1B[{};{}m",
         .{
-            F.tag(),
-            B.tag(),
-        },
-    ) catch unreachable;
-}
-
-/// Set style of text using color mode, background and foreground by name
-pub fn setColorMBFName(colorM: ColorDef.ColorMU, colorB: ?ColorDef.ColorBU, colorF: ?ColorDef.ColorFU) void {
-    const B = colorB orelse ColorDef.ColorBU.Default;
-    const F = colorF orelse ColorDef.ColorFU.Default;
-    _ = write_out.print(
-        "\x1B[{};{};{}m",
-        .{
-            colorM.tag(),
             F.tag(),
             B.tag(),
         },

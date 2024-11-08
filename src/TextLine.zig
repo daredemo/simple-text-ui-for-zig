@@ -5,9 +5,9 @@ const RGB = @import("Color.zig").RGB;
 const ColorB = @import("Color.zig").ColorB;
 const ColorF = @import("Color.zig").ColorF;
 const ColorStyle = @import("Color.zig").ColorStyle;
+const ColorModes = @import("Color.zig").ColorModes;
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
-const ColorMU = @import("Color.zig").ColorMU;
 
 const w_out = std.io.getStdOut().writer();
 
@@ -119,24 +119,6 @@ pub const TextLine = struct {
         return self;
     }
 
-    /// Set color mode
-    pub fn md(self: *TextLine, mode: ColorMU) *TextLine {
-        const b_default = ColorB.initName(
-            ColorBU.Default,
-        );
-        const f_default = ColorF.initName(
-            ColorFU.Default,
-        );
-        var style = self.color orelse ColorStyle.init(
-            b_default,
-            f_default,
-            null,
-        );
-        style.md = mode;
-        self.color = style;
-        return self;
-    }
-
     pub fn setColor(self: *TextLine, color: ?ColorStyle) *TextLine {
         self.color = color;
         return self;
@@ -147,7 +129,6 @@ pub const TextLine = struct {
         const fu_default = ColorFU.Reset;
         const b_default = ColorB.initName(bu_default);
         const f_default = ColorF.initName(fu_default);
-        const m_reset = ColorMU.Reset;
         const style = self.color orelse ColorStyle.init(
             b_default,
             f_default,
@@ -168,7 +149,7 @@ pub const TextLine = struct {
                 px + @abs(rx),
             );
         }
-        if (style.md == null) {
+        if (style.modes == null) {
             _ = Term.setColorBF(
                 style.bg.?,
                 style.fg.?,
@@ -182,10 +163,12 @@ pub const TextLine = struct {
                 .{self.text.?},
             ) catch unreachable;
         }
-        _ = Term.setColorMBFName(
-            m_reset,
-            bu_default,
-            fu_default,
+        _ = Term.setColorStyle(
+            ColorStyle{
+                .fg = f_default,
+                .bg = b_default,
+                .modes = ColorModes{ .Reset = true },
+            },
         );
         return self;
     }

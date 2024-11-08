@@ -8,11 +8,8 @@ const ColorB = ColorDef.ColorB;
 const ColorF = ColorDef.ColorF;
 const ColorBU = ColorDef.ColorBU;
 const ColorFU = ColorDef.ColorFU;
-const ColorMU = ColorDef.ColorMU;
-// const ColorBE = ColorDef.ColorBE;
-// const ColorFE = ColorDef.ColorFE;
-// const ColorME = ColorDef.ColorME;
 const ColorStyle = ColorDef.ColorStyle;
+const ColorModes = ColorDef.ColorModes;
 
 pub fn main() !void {
     const write_out = std.io.getStdOut().writer();
@@ -75,31 +72,43 @@ pub fn main() !void {
     const dim_white_blue = ColorStyle.init(
         b_brightwhite,
         f_blue,
-        ColorMU.Dim,
+        ColorModes{ .Dim = true },
     );
     _ = Term.setColorStyle(dim_white_blue);
     _ = try write_out.print("A dim second level title", .{});
-    _ = Term.setColorMD(ColorMU.Reset);
+    _ = Term.setColorStyle(
+        ColorStyle{
+            .bg = null,
+            .fg = null,
+            .modes = ColorModes{ .Reset = true },
+        },
+    );
     _ = Term.cursorDownB(null);
-    _ = Term.setColorMBFName(
-        ColorMU.Underline,
-        null,
-        ColorFU.Blue,
+    _ = Term.setColorStyle(
+        ColorStyle{
+            .bg = null,
+            .fg = ColorF.initName(ColorFU.Blue),
+            .modes = ColorModes{ .Underline = true },
+        },
     );
     _ = try write_out.print("More text", .{});
     _ = Term.cursorDownB(null);
-    _ = Term.setColorMBFName(
-        ColorMU.Underline,
-        null,
-        ColorFU.BrightBlue,
+    _ = Term.setColorStyle(
+        ColorStyle{
+            .bg = null,
+            .fg = ColorF.initName(ColorFU.BrightBlue),
+            .modes = ColorModes{ .Underline = true },
+        },
     );
     _ = try write_out.print("More text", .{});
     _ = Term.cursorDownB(null);
 
     std.time.sleep(2 * std.time.ns_per_s);
-    _ = Term.setColorMBFName(
-        ColorMU.Reset,
-        null,
-        null,
+    _ = Term.setColorStyle(
+        ColorStyle{
+            .bg = null,
+            .fg = null,
+            .modes = ColorModes{ .Reset = true },
+        },
     );
 }

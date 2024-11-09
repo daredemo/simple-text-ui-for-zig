@@ -18,7 +18,7 @@ Currently the library works on Linux. It is not tested on MacOS, etc., but shoul
 |Disable echo of user input|✅     | |
 |Disable CTRL-C|✅     |Allowing CTRL-C would prevent restoration of terminal state|
 |TextLine  |✅     |Basic stuff is done |
-|Colors    |⬜ WIP |Color/Graphics modes need more work |
+|Colors    |✅     |Color/Graphics modes need more work |
 |Panels    |✅     |Divide screen to vertical/horizontal panels|
 |Frames    |✅     |Framed layouts/boxes/popups|
 |Popups    |⬜ TODO| |

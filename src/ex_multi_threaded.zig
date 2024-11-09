@@ -18,7 +18,7 @@ const BufWriter = @import(
     "SimpleBufferedWriter.zig",
 ).SimpleBufferedWriter;
 
-const write_out = std.io.getStdOut().writer();
+// const write_out = std.io.getStdOut().writer();
 
 pub fn main() !void {
     var buf_writer = BufWriter{};

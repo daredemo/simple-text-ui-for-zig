@@ -4,15 +4,12 @@ const std = @import("std");
 pub const CharReader = struct {
     char_buffer: ?u8,
     char_last_read: ?u8,
-    // reader: std.io.AnyReader, // Reader,
 
-    // pub fn init(reader: std.io.AnyReader) CharReader {
     /// Initialize the CharReader
     pub fn init() CharReader {
         return .{
             .char_buffer = null,
             .char_last_read = null,
-            // .reader = reader,
         };
     }
 
@@ -44,6 +41,9 @@ pub const CharReader = struct {
     pub fn cleanStdin(self: *CharReader) void {
         _ = self;
         var tmp_buffer: [1024]u8 = undefined;
-        _ = std.io.getStdIn().reader().readUntilDelimiterOrEof(&tmp_buffer, '\n') catch unreachable;
+        _ = std.io.getStdIn().reader().readUntilDelimiterOrEof(
+            &tmp_buffer,
+            '\n',
+        ) catch unreachable;
     }
 };

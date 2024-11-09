@@ -1,14 +1,35 @@
 const std = @import("std");
 
-const TextLine = @import("TextLine.zig").TextLine;
-const Border = @import("Border.zig").Border;
-const TextAlign = @import("StringStuff.zig").Alignment;
-const stringAlign = @import("StringStuff.zig").stringAlign;
-const stringLen = @import("StringStuff.zig").stringLen;
-const Term = @import("ansi_terminal.zig");
-const Location = @import("Location.zig").Location;
-const Face = @import("Location.zig").Face;
-const FaceE = @import("Location.zig").FaceE;
+const TextLine = @import(
+    "TextLine.zig",
+).TextLine;
+const Border = @import(
+    "Border.zig",
+).Border;
+const TextAlign = @import(
+    "StringStuff.zig",
+).Alignment;
+const stringAlign = @import(
+    "StringStuff.zig",
+).stringAlign;
+const stringLen = @import(
+    "StringStuff.zig",
+).stringLen;
+const Term = @import(
+    "ansi_terminal.zig",
+);
+const Location = @import(
+    "Location.zig",
+).Location;
+const Face = @import(
+    "Location.zig",
+).Face;
+const FaceE = @import(
+    "Location.zig",
+).FaceE;
+const BufWriter = @import(
+    "SimpleBufferedWriter.zig",
+).SimpleBufferedWriter;
 
 const TAL = TextAlign.Left;
 const TAR = TextAlign.Right;
@@ -49,6 +70,9 @@ pub const RenderText = struct {
     pub fn draw(self: *RenderText) void {
         if (self.parent != null) {
             const p = self.parent.?;
+            if (p.writer.list.len > 3072) {
+                _ = p.writer.flush() catch unreachable;
+            }
             _ = self.text.parentXY(
                 @as(u32, @abs(p.anchor_x)),
                 @as(u32, @abs(p.anchor_y)),
@@ -79,6 +103,9 @@ pub const RenderTextArray = struct {
         // _ = self;
         if (self.parent != null) {
             const p = self.parent.?;
+            if (p.writer.list.len > 3072) {
+                _ = p.writer.flush() catch unreachable;
+            }
             _ = self.text.parentXY(
                 @as(u32, @abs(p.anchor_x)),
                 @as(u32, @abs(p.anchor_y)),
@@ -88,6 +115,9 @@ pub const RenderTextArray = struct {
             const p = self.parent.?;
             const nx: i32 = item.x * self.multi_x + self.delta_x;
             const ny: i32 = item.y * self.multi_y + self.delta_y;
+            if (p.writer.list.len > 3072) {
+                _ = p.writer.flush() catch unreachable;
+            }
             if (index == 0) {
                 if (self.text_first != null) {
                     _ = self.text_first.?.parentXY(
@@ -122,6 +152,7 @@ pub const RenderTextArray = struct {
                 _ = self.text.draw();
             }
         }
+        _ = self.parent.?.writer.flush() catch unreachable;
         if (self.next_array != null) {
             _ = self.next_array.?.draw();
         }
@@ -153,12 +184,24 @@ pub const Panel = struct {
     size_relative: ?f32 = undefined,
     border: ?Border = undefined,
     allocator: *std.mem.Allocator = undefined,
-    ch_sizes_absolute: std.ArrayList(i32) = undefined,
-    ch_sizes_relative: std.ArrayList(f32) = undefined,
+    writer: *BufWriter = undefined,
+    ch_sizes_absolute: std.ArrayList(
+        i32,
+    ) = undefined,
+    ch_sizes_relative: std.ArrayList(
+        f32,
+    ) = undefined,
 
     /// Initialize a sub-panel
-    pub fn init(title: ?[]const u8, parent: *Panel, layout: Layout, allocator: *std.mem.Allocator) *Panel {
-        const panel = allocator.create(Panel) catch unreachable;
+    pub fn init(
+        title: ?[]const u8,
+        parent: *Panel,
+        layout: Layout,
+        allocator: *std.mem.Allocator,
+    ) *Panel {
+        const panel = allocator.create(
+            Panel,
+        ) catch unreachable;
         panel.* = Panel{
             .title = title,
             .title_position = PositionTB.None,
@@ -168,6 +211,7 @@ pub const Panel = struct {
             .parent = parent,
             .layout = layout,
             .allocator = allocator,
+            .writer = parent.writer,
             .parent_width = &parent.width,
             .parent_height = &parent.height,
             .full_width = &parent.width,
@@ -182,15 +226,28 @@ pub const Panel = struct {
             .size_absolute = null,
             .size_relative = null,
             .border = null,
-            .ch_sizes_absolute = std.ArrayList(i32).init(allocator.*),
-            .ch_sizes_relative = std.ArrayList(f32).init(allocator.*),
+            .ch_sizes_absolute = std.ArrayList(
+                i32,
+            ).init(allocator.*),
+            .ch_sizes_relative = std.ArrayList(
+                f32,
+            ).init(allocator.*),
         };
         return panel;
     }
 
     /// Initialize the root panel, i.e., the whole screen
-    pub fn initRoot(title: ?[]const u8, parent_w: *i32, parent_h: *i32, layout: Layout, allocator: *std.mem.Allocator) *Panel {
-        const panel = allocator.create(Panel) catch unreachable;
+    pub fn initRoot(
+        title: ?[]const u8,
+        parent_w: *i32,
+        parent_h: *i32,
+        layout: Layout,
+        allocator: *std.mem.Allocator,
+        writer: *BufWriter,
+    ) *Panel {
+        const panel = allocator.create(
+            Panel,
+        ) catch unreachable;
         panel.* = Panel{
             .title = title,
             .title_position = PositionTB.None,
@@ -200,6 +257,7 @@ pub const Panel = struct {
             .anchor_y = 1,
             .layout = layout,
             .allocator = allocator,
+            .writer = writer,
             .parent_width = parent_w,
             .parent_height = parent_h,
             .full_width = parent_w,
@@ -214,8 +272,12 @@ pub const Panel = struct {
             .size_absolute = null,
             .size_relative = null,
             .border = null,
-            .ch_sizes_absolute = std.ArrayList(i32).init(allocator.*),
-            .ch_sizes_relative = std.ArrayList(f32).init(allocator.*),
+            .ch_sizes_absolute = std.ArrayList(
+                i32,
+            ).init(allocator.*),
+            .ch_sizes_relative = std.ArrayList(
+                f32,
+            ).init(allocator.*),
         };
         panel.width = parent_w.*;
         panel.height = parent_h.*;
@@ -223,13 +285,21 @@ pub const Panel = struct {
     }
 
     /// Clean up memory
-    pub fn deinit(self: *Panel, allocator: *std.mem.Allocator) void {
+    pub fn deinit(
+        self: *Panel,
+        allocator: *std.mem.Allocator,
+    ) void {
         _ = allocator.destroy(&self.ch_sizes_absolute);
         _ = allocator.destroy(&self.ch_sizes_relative);
     }
 
     /// Add a new child to the end of children's list
-    pub fn appendChild(self: *Panel, child: *Panel, absolute_size: ?i32, relative_size: ?f32) *Panel {
+    pub fn appendChild(
+        self: *Panel,
+        child: *Panel,
+        absolute_size: ?i32,
+        relative_size: ?f32,
+    ) *Panel {
         var the_child = child;
         the_child.full_width = self.full_width;
         the_child.full_height = self.full_height;
@@ -242,17 +312,26 @@ pub const Panel = struct {
             self.child_head = the_child;
         } else {
             const current_child = self.child_head.?;
-            var last_child = self.getLastChild(current_child).?;
+            var last_child = self.getLastChild(
+                current_child,
+            ).?;
             last_child.sibling_next = the_child;
         }
-        _ = self.ch_sizes_absolute.append(s_abs) catch unreachable;
-        _ = self.ch_sizes_relative.append(s_rel) catch unreachable;
+        _ = self.ch_sizes_absolute.append(
+            s_abs,
+        ) catch unreachable;
+        _ = self.ch_sizes_relative.append(
+            s_rel,
+        ) catch unreachable;
         _ = self.update();
         return self;
     }
 
     /// Find the last child of the current panel
-    pub fn getLastChild(self: *Panel, child: ?*Panel) ?*Panel {
+    pub fn getLastChild(
+        self: *Panel,
+        child: ?*Panel,
+    ) ?*Panel {
         if (child == null) {
             return null;
         } else {
@@ -260,27 +339,37 @@ pub const Panel = struct {
             if (theChild.sibling_next == null) {
                 return theChild;
             } else {
-                return self.getLastChild(theChild.sibling_next);
+                return self.getLastChild(
+                    theChild.sibling_next,
+                );
             }
         }
     }
 
     /// Add a new child to the end of children's list
-    pub fn appendText(self: *Panel, child: *RenderText) *Panel {
+    pub fn appendText(
+        self: *Panel,
+        child: *RenderText,
+    ) *Panel {
         var the_child = child;
         the_child.parent = self;
         if (self.render_text_next == null) {
             self.render_text_next = the_child;
         } else {
             const current_child = self.render_text_next.?;
-            var last_child = self.getLastText(current_child).?;
+            var last_child = self.getLastText(
+                current_child,
+            ).?;
             last_child.next_text = the_child;
         }
         return self;
     }
 
     /// Find the last child of the current panel
-    pub fn getLastText(self: *Panel, child: ?*RenderText) ?*RenderText {
+    pub fn getLastText(
+        self: *Panel,
+        child: ?*RenderText,
+    ) ?*RenderText {
         if (child == null) {
             return null;
         } else {
@@ -288,13 +377,18 @@ pub const Panel = struct {
             if (theChild.next_text == null) {
                 return theChild;
             } else {
-                return self.getLastText(theChild.next_text);
+                return self.getLastText(
+                    theChild.next_text,
+                );
             }
         }
     }
 
     /// Add a new child to the end of children's list
-    pub fn appendArray(self: *Panel, child: *RenderTextArray) *Panel {
+    pub fn appendArray(
+        self: *Panel,
+        child: *RenderTextArray,
+    ) *Panel {
         var the_child = child;
         the_child.parent = self;
         if (self.render_array_next == null) {
@@ -308,7 +402,10 @@ pub const Panel = struct {
     }
 
     /// Find the last child of the current panel
-    pub fn getLastArray(self: *Panel, child: ?*RenderTextArray) ?*RenderTextArray {
+    pub fn getLastArray(
+        self: *Panel,
+        child: ?*RenderTextArray,
+    ) ?*RenderTextArray {
         if (child == null) {
             return null;
         } else {
@@ -316,13 +413,19 @@ pub const Panel = struct {
             if (theChild.next_array == null) {
                 return theChild;
             } else {
-                return self.getLastArray(theChild.next_array);
+                return self.getLastArray(
+                    theChild.next_array,
+                );
             }
         }
     }
 
     /// Set title's location (h: left, center, right; v: top, center, bottom)
-    pub fn titleLocation(self: *Panel, horizontal: ?TextAlign, vertical: ?PositionTB) *Panel {
+    pub fn titleLocation(
+        self: *Panel,
+        horizontal: ?TextAlign,
+        vertical: ?PositionTB,
+    ) *Panel {
         if (horizontal != null) {
             const a = horizontal.?;
             self.title_align = a;
@@ -335,13 +438,19 @@ pub const Panel = struct {
     }
 
     /// Set minimum width when panel is rendered
-    pub fn setMinWidth(self: *Panel, width: i32) *Panel {
+    pub fn setMinWidth(
+        self: *Panel,
+        width: i32,
+    ) *Panel {
         self.minimum_width = width;
         return self;
     }
 
     /// Set minimum height when panel is rendered
-    pub fn setMinHeight(self: *Panel, height: i32) *Panel {
+    pub fn setMinHeight(
+        self: *Panel,
+        height: i32,
+    ) *Panel {
         self.minimum_height = height;
         return self;
     }
@@ -480,7 +589,10 @@ pub const Panel = struct {
     }
 
     /// Configure the border settings
-    pub fn setBorder(self: *Panel, border: ?Border) *Panel {
+    pub fn setBorder(
+        self: *Panel,
+        border: ?Border,
+    ) *Panel {
         self.border = border;
         return self;
     }
@@ -489,15 +601,23 @@ pub const Panel = struct {
     pub fn draw(self: *Panel) *Panel {
         _ = self.update();
         if (self.parent == null) {
-            _ = Term.clearScreen();
+            _ = Term.clearScreen(self.writer);
         }
-        if ((self.width >= self.minimum_width) and (self.height >= self.minimum_height)) {
+        if ((self.width >= self.minimum_width) and //
+            (self.height >= self.minimum_height))
+        {
             const hh = @as(usize, @abs(self.height)); // + 1;
             for (0..hh) |row| {
+                if (self.writer.list.len > 3072) {
+                    _ = self.writer.flush() catch unreachable;
+                }
                 var tl_buffer_1: [512]u8 = undefined;
                 var tl_buffer_2: [512]u8 = undefined;
                 var tl_buffer_3: [512]u8 = undefined;
-                var tl = TextLine.init("");
+                var tl = TextLine.init(
+                    self.writer,
+                    "",
+                );
                 _ = tl.absXY(
                     @abs(self.anchor_x),
                     @abs(self.anchor_y) + @as(u32, @intCast(row)),
@@ -514,7 +634,9 @@ pub const Panel = struct {
                     const b_bl = border.bottom_left orelse ' ';
                     const b_br = border.bottom_right orelse ' ';
                     if (row == 0) {
-                        if ((self.title != null) and (self.title_position.tag() == 1)) {
+                        if ((self.title != null) and //
+                            (self.title_position.tag() == 1))
+                        {
                             const title_len = stringLen(self.title.?);
                             const ts = stringAlign(
                                 &tl_buffer_1,
@@ -577,7 +699,9 @@ pub const Panel = struct {
                             _ = tl.textLine(ts4).draw();
                         }
                     } else if (row == self.height - 1) {
-                        if ((self.title != null) and (self.title_position.tag() == 2)) {
+                        if ((self.title != null) and //
+                            (self.title_position.tag() == 2))
+                        {
                             const title_len = stringLen(self.title.?);
                             const ts = stringAlign(
                                 &tl_buffer_1,
@@ -679,20 +803,34 @@ pub const Panel = struct {
             if (self.render_text_next != null) {
                 const r_text = self.render_text_next.?;
                 _ = r_text.draw();
+                if (self.writer.list.len > 3072) {
+                    _ = self.writer.flush() catch unreachable;
+                }
             }
             if (self.render_array_next != null) {
                 const r_text = self.render_array_next.?;
                 _ = r_text.draw();
+                if (self.writer.list.len > 3072) {
+                    _ = self.writer.flush() catch unreachable;
+                }
             }
         }
+        _ = self.writer.flush() catch unreachable;
         // Draw other siblings
         if (self.sibling_next != null) {
             _ = self.sibling_next.?.draw();
+            if (self.writer.list.len > 3072) {
+                _ = self.writer.flush() catch unreachable;
+            }
         }
         // Draw the "children"
         if (self.child_head != null) {
             _ = self.child_head.?.draw();
+            if (self.writer.list.len > 3072) {
+                _ = self.writer.flush() catch unreachable;
+            }
         }
+        _ = self.writer.flush() catch unreachable;
         return self;
     }
 };

@@ -145,67 +145,81 @@ pub const Border = struct {
         return border;
     }
 
+    /// Set color by color style
     pub fn setColor(self: *Border, color: ColorStyle) *Border {
         self.color = color;
         return self;
     }
 
+    /// Set top border character/symbol
     pub fn setTop(self: *Border, v: ?u21) *Border {
         self.top = v;
         return self;
     }
+    /// Set bottom border character/symbol
     pub fn setBottom(self: *Border, v: ?u21) *Border {
         self.bottom = v;
         return self;
     }
+    /// Set left border character/symbol
     pub fn setLeft(self: *Border, v: ?u21) *Border {
         self.left = v;
         return self;
     }
+    /// Set right border character/symbol
     pub fn setRight(self: *Border, v: ?u21) *Border {
         self.right = v;
         return self;
     }
+    /// Set top-left border character/symbol
     pub fn setTopLeft(self: *Border, v: ?u21) *Border {
         self.top_left = v;
         return self;
     }
+    /// Set top-right border character/symbol
     pub fn setTopRight(self: *Border, v: ?u21) *Border {
         self.top_right = v;
         return self;
     }
+    /// Set bottom-left border character/symbol
     pub fn setBottomLeft(self: *Border, v: ?u21) *Border {
         self.bottom_left = v;
         return self;
     }
+    /// Set bottom-right border character/symbol
     pub fn setBottomRight(self: *Border, v: ?u21) *Border {
         self.bottom_right = v;
         return self;
     }
+    /// Set top border characters/symbols
     pub fn setTopAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_left = l;
         self.top = c;
         self.top_right = r;
         return self;
     }
+    /// Set bottom border characters/symbols
     pub fn setBottomAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.bottom_left = l;
         self.bottom = c;
         self.bottom_right = r;
         return self;
     }
+    /// Set left border characters/symbols
     pub fn setLeftAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_left = l;
         self.left = c;
         self.bottom_left = r;
         return self;
     }
+    /// Set right border characters/symbols
     pub fn setRightAll(self: *Border, l: ?u21, c: ?u21, r: ?u21) *Border {
         self.top_right = l;
         self.right = c;
         self.bottom_right = r;
         return self;
     }
+    /// Set border style to set all border characters/symbols
     pub fn setBorderStyle(self: *Border, style: BorderStyle) *Border {
         const tags = style.tag();
         self.top = tags.horizontal;

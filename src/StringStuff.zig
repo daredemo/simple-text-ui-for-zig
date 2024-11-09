@@ -16,7 +16,12 @@ pub const Alignment = enum {
     }
 };
 
-pub fn stringLeft(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringLeft(
+    str: []const u8,
+    fill: u21,
+    len: usize,
+    writer: anytype,
+) void {
     _ = std.fmt.formatText(
         str,
         "s",
@@ -29,7 +34,12 @@ pub fn stringLeft(str: []const u8, fill: u21, len: usize, writer: anytype) void 
     ) catch unreachable;
 }
 
-pub fn stringRight(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringRight(
+    str: []const u8,
+    fill: u21,
+    len: usize,
+    writer: anytype,
+) void {
     _ = std.fmt.formatText(
         str,
         "s",
@@ -42,7 +52,12 @@ pub fn stringRight(str: []const u8, fill: u21, len: usize, writer: anytype) void
     ) catch unreachable;
 }
 
-pub fn stringCenter(str: []const u8, fill: u21, len: usize, writer: anytype) void {
+pub fn stringCenter(
+    str: []const u8,
+    fill: u21,
+    len: usize,
+    writer: anytype,
+) void {
     _ = std.fmt.formatText(
         str,
         "s",
@@ -55,7 +70,13 @@ pub fn stringCenter(str: []const u8, fill: u21, len: usize, writer: anytype) voi
     ) catch unreachable;
 }
 
-pub fn stringAlign(buf: []u8, str: []const u8, fill: u21, len: usize, alignment: Alignment) []u8 {
+pub fn stringAlign(
+    buf: []u8,
+    str: []const u8,
+    fill: u21,
+    len: usize,
+    alignment: Alignment,
+) []u8 {
     var stream = std.io.fixedBufferStream(buf);
     switch (alignment.tag()) {
         0 => {
@@ -103,7 +124,9 @@ pub fn stringAlign(buf: []u8, str: []const u8, fill: u21, len: usize, alignment:
 }
 
 pub fn stringLen(text: []const u8) usize {
-    var utf8_view = std.unicode.Utf8View.init(text) catch unreachable;
+    var utf8_view = std.unicode.Utf8View.init(
+        text,
+    ) catch unreachable;
     var utf8 = utf8_view.iterator();
     var char_count: usize = 0;
     while (utf8.nextCodepoint()) |_| : (char_count += 1) {}

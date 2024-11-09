@@ -14,55 +14,96 @@ const ColorStyle = ColorDef.ColorStyle;
 const ColorModes = ColorDef.ColorModes;
 const TextLine = TLine.TextLine;
 
+const BufWriter = @import(
+    "SimpleBufferedWriter.zig",
+).SimpleBufferedWriter;
+
 const write_out = std.io.getStdOut().writer();
 
 pub fn main() !void {
+    var buf_writer = BufWriter{};
+    defer _ = buf_writer.flush() catch unreachable;
     libdef.handleSigwinch(0);
     libdef.setSignal();
-    _ = Term.saveTerminalState();
+    _ = Term.saveTerminalState(&buf_writer);
     defer {
-        _ = Term.restoreTerminalState();
+        _ = Term.restoreTerminalState(&buf_writer);
     }
     const old_terminal = libdef.saveTerminalSettings();
     var new_terminal = libdef.saveTerminalSettings();
     defer libdef.restoreTerminalSettings(old_terminal);
     libdef.disableEchoAndCanonicalMode(&new_terminal);
-    _ = Term.disableCursor();
+    _ = Term.disableCursor(&buf_writer);
     defer {
-        _ = Term.enableCursor();
+        _ = Term.enableCursor(&buf_writer);
     }
     defer {
         _ = Term.setColorStyle(
+            &buf_writer,
             ColorStyle{
                 .fg = null,
                 .bg = null,
-                .modes = ColorModes{ .Reset = true },
+                .modes = ColorModes{
+                    .Reset = true,
+                },
             },
         );
     }
-    _ = Term.clearScreen();
+    _ = buf_writer.flush() catch unreachable;
+    _ = Term.clearScreen(&buf_writer);
     var the_app = TheApp.init(
         "Threaded App",
         20,
         15,
+        &buf_writer,
     );
     var tl_buffer: [512]u8 = undefined;
-    const app_name = try std.fmt.bufPrint(&tl_buffer, "Active program: {s}\n", .{the_app.name});
-    var tl1 = TextLine.init(app_name);
-    _ = tl1.absXY(0, 1).bg(ColorB.initName(ColorBU.Blue)).fg(ColorF.initName(ColorFU.Black)).draw();
-    var tl2 = TextLine.init("r -- run, p -- print, q -- quit\n");
+    const app_name = try std.fmt.bufPrint(
+        &tl_buffer,
+        "Active program: {s}\n",
+        .{the_app.name},
+    );
+    var tl1 = TextLine.init(
+        &buf_writer,
+        app_name,
+    );
+    _ = tl1.absXY(0, 1).bg(
+        ColorB.initName(ColorBU.Blue),
+    ).fg(
+        ColorF.initName(ColorFU.Black),
+    ).draw();
+    var tl2 = TextLine.init(
+        &buf_writer,
+        "r -- run, p -- print, q -- quit\n",
+    );
     _ = tl2.absXY(0, 2).draw();
-    var tl3 = TextLine.init("    \n");
+    var tl3 = TextLine.init(&buf_writer, "    \n");
     _ = tl3.bg(ColorB.initName(ColorBU.White));
     _ = tl3.absXY(0, 3).draw();
     _ = tl3.absXY(0, 4).draw();
-    _ = Term.cursorTo(6, 0);
-    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
-    var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{&the_app});
+    _ = Term.cursorTo(&buf_writer, 6, 0);
+    _ = Term.setColorB(
+        &buf_writer,
+        ColorB.initName(ColorBU.Reset),
+    );
+    _ = buf_writer.flush() catch unreachable;
+    var thread_heartbeat = try std.Thread.spawn(
+        .{},
+        doAppHeartBeatThread,
+        .{&the_app},
+    );
     defer thread_heartbeat.join();
-    var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{&the_app});
+    var thread_inputs = try std.Thread.spawn(
+        .{},
+        doAppInputThread,
+        .{&the_app},
+    );
     defer thread_inputs.join();
-    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
+    _ = Term.setColorB(
+        &buf_writer,
+        ColorB.initName(ColorBU.Reset),
+    );
+    _ = buf_writer.flush() catch unreachable;
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
@@ -80,20 +121,30 @@ const TheApp = struct {
     heart_beat: bool,
     width: u8,
     height: u8,
+    writer: *BufWriter,
 
-    pub fn init(the_name: []const u8, width: u8, height: u8) TheApp {
+    pub fn init(
+        the_name: []const u8,
+        width: u8,
+        height: u8,
+        writer: *BufWriter,
+    ) TheApp {
         return TheApp{
             .name = the_name,
             .is_running = true,
             .heart_beat = false,
             .width = width,
             .height = height,
+            .writer = writer,
         };
     }
 
     pub fn getInputs(self: *TheApp) !void {
         var reader = ChRead.CharReader.init();
-        var tl_input = TextLine.init(" ");
+        var tl_input = TextLine.init(
+            self.writer,
+            " ",
+        );
         _ = tl_input.absXY(0, 6);
         while (true) {
             {
@@ -102,43 +153,77 @@ const TheApp = struct {
                 if (!(self.is_running)) break;
             }
             const c = reader.getchar();
-            _ = Term.cursorTo(6, 0);
+            _ = Term.cursorTo(
+                self.writer,
+                6,
+                0,
+            );
             const ch = if (c) |cc| cc else 0;
             switch (ch) {
                 'p' => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine("Printing...").draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        "Printing...",
+                    ).draw();
                 },
                 'r' => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine("Running...").draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        "Running...",
+                    ).draw();
                 },
                 9 => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine("TAB").draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        "TAB",
+                    ).draw();
                 },
                 10 => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine("ENTER").draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        "ENTER",
+                    ).draw();
                 },
                 32 => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine("SPACE").draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        "SPACE",
+                    ).draw();
                 },
                 'q' => {
-                    _ = Term.eraseCES();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
                     self.mutex.lock();
                     defer self.mutex.unlock();
                     self.is_running = false;
                     break;
                 },
                 33...111 => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine(([2]u8{ ch, 0 })[0..]).draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        ([2]u8{ ch, 0 })[0..],
+                    ).draw();
                 },
                 115...126 => {
-                    _ = Term.eraseCES();
-                    _ = tl_input.textLine(([2]u8{ ch, 0 })[0..]).draw();
+                    _ = Term.eraseCES(
+                        self.writer,
+                    );
+                    _ = tl_input.textLine(
+                        ([2]u8{ ch, 0 })[0..],
+                    ).draw();
                 },
                 27 => {
                     const ch1 = reader.getchar();
@@ -148,31 +233,52 @@ const TheApp = struct {
                         const chb = if (ch2) |cc| cc else 0;
                         switch (chb) {
                             'A' => {
-                                _ = Term.eraseCES();
-                                _ = tl_input.textLine("Arrow UP").draw();
+                                _ = Term.eraseCES(
+                                    self.writer,
+                                );
+                                _ = tl_input.textLine(
+                                    "Arrow UP",
+                                ).draw();
                             },
                             'B' => {
-                                _ = Term.eraseCES();
-                                _ = tl_input.textLine("Arrow DOWN").draw();
+                                _ = Term.eraseCES(
+                                    self.writer,
+                                );
+                                _ = tl_input.textLine(
+                                    "Arrow DOWN",
+                                ).draw();
                             },
                             'C' => {
-                                _ = Term.eraseCES();
-                                _ = tl_input.textLine("Arrow RIGHT").draw();
+                                _ = Term.eraseCES(
+                                    self.writer,
+                                );
+                                _ = tl_input.textLine(
+                                    "Arrow RIGHT",
+                                ).draw();
                             },
                             'D' => {
-                                _ = Term.eraseCES();
-                                _ = tl_input.textLine("Arrow LEFT").draw();
+                                _ = Term.eraseCES(
+                                    self.writer,
+                                );
+                                _ = tl_input.textLine(
+                                    "Arrow LEFT",
+                                ).draw();
                             },
                             else => {},
                         }
                     } else {
                         _ = reader.ungetcLast();
-                        _ = Term.eraseCES();
-                        _ = tl_input.textLine("ESCAPE").draw();
+                        _ = Term.eraseCES(
+                            self.writer,
+                        );
+                        _ = tl_input.textLine(
+                            "ESCAPE",
+                        ).draw();
                     }
                 },
                 else => {},
             }
+            _ = self.writer.flush() catch unreachable;
         }
     }
 
@@ -180,11 +286,27 @@ const TheApp = struct {
         const w_width: *i32 = &libdef.win_width;
         const w_height: *i32 = &libdef.win_height;
         var counter: u8 = 0;
-        var tl_heart = TextLine.init("♥");
+        var tl_heart = TextLine.init(
+            self.writer,
+            "♥",
+        );
         var tl_buffer: [512]u8 = undefined;
-        var tl_winsize = TextLine.init("");
-        _ = tl_heart.fg(ColorF.initName(ColorFU.Blue)).absXY(0, 5);
-        _ = tl_winsize.fg(ColorF.initName(ColorFU.Blue)).absXY(4, 5);
+        var tl_winsize = TextLine.init(
+            self.writer,
+            "",
+        );
+        _ = tl_heart.fg(
+            ColorF.initName(ColorFU.Blue),
+        ).absXY(
+            0,
+            5,
+        );
+        _ = tl_winsize.fg(
+            ColorF.initName(ColorFU.Blue),
+        ).absXY(
+            4,
+            5,
+        );
         while (true) {
             {
                 self.mutex.lock();
@@ -202,15 +324,29 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.textLine(" ").draw();
                 }
-                const wsize_str = try std.fmt.bufPrint(&tl_buffer, "WIDTH = {d:3}: HEIGHT = {d:3}", .{
-                    w_width.*,
-                    w_height.*,
-                });
+                const wsize_str = try std.fmt.bufPrint(
+                    &tl_buffer,
+                    "WIDTH = {d:3}: HEIGHT = {d:3}",
+                    .{
+                        w_width.*,
+                        w_height.*,
+                    },
+                );
                 _ = tl_winsize.textLine(wsize_str).draw();
-                _ = Term.eraseCEL();
+                _ = Term.eraseCEL(
+                    self.writer,
+                );
 
-                _ = Term.setColorF(ColorF.initName(ColorFU.Default));
-                _ = Term.cursorTo(6, 0);
+                _ = Term.setColorF(
+                    self.writer,
+                    ColorF.initName(ColorFU.Default),
+                );
+                _ = Term.cursorTo(
+                    self.writer,
+                    6,
+                    0,
+                );
+                _ = self.writer.flush() catch unreachable;
             }
         }
     }

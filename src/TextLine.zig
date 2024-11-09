@@ -4,12 +4,20 @@ const Term = @import("ansi_terminal.zig");
 const RGB = @import("Color.zig").RGB;
 const ColorB = @import("Color.zig").ColorB;
 const ColorF = @import("Color.zig").ColorF;
-const ColorStyle = @import("Color.zig").ColorStyle;
-const ColorModes = @import("Color.zig").ColorModes;
+const ColorStyle = @import(
+    "Color.zig",
+).ColorStyle;
+const ColorModes = @import(
+    "Color.zig",
+).ColorModes;
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
 
-const w_out = std.io.getStdOut().writer();
+const BufWriter = @import(
+    "SimpleBufferedWriter.zig",
+).SimpleBufferedWriter;
+
+// const w_out = std.io.getStdOut().writer();
 
 /// TextLine that contains the text, position, style, etc
 pub const TextLine = struct {
@@ -29,10 +37,15 @@ pub const TextLine = struct {
     absolute_y: ?u32 = undefined,
     /// Color/Style
     color: ?ColorStyle = undefined,
+    /// Buffered writer
+    writer: *BufWriter,
 
     /// Default TextLine drawn with default colors, etc at
     /// at current location of the cursor
-    pub fn init(text: []const u8) TextLine {
+    pub fn init(
+        writer: *BufWriter,
+        text: []const u8,
+    ) TextLine {
         return TextLine{
             .text = text,
             .parent_x = null,
@@ -42,49 +55,74 @@ pub const TextLine = struct {
             .absolute_x = null,
             .absolute_y = null,
             .color = null,
+            .writer = writer,
         };
     }
 
-    pub fn textLine(self: *TextLine, line: []const u8) *TextLine {
+    pub fn textLine(
+        self: *TextLine,
+        line: []const u8,
+    ) *TextLine {
         self.text = line;
         return self;
     }
 
     ///
-    pub fn absX(self: *TextLine, x: u32) *TextLine {
+    pub fn absX(
+        self: *TextLine,
+        x: u32,
+    ) *TextLine {
         self.absolute_x = x;
         return self;
     }
 
     ///
-    pub fn absY(self: *TextLine, y: u32) *TextLine {
+    pub fn absY(
+        self: *TextLine,
+        y: u32,
+    ) *TextLine {
         self.absolute_y = y;
         return self;
     }
 
     ///
-    pub fn absXY(self: *TextLine, x: u32, y: u32) *TextLine {
+    pub fn absXY(
+        self: *TextLine,
+        x: u32,
+        y: u32,
+    ) *TextLine {
         self.absolute_x = x;
         self.absolute_y = y;
         return self;
     }
 
     ///
-    pub fn parentXY(self: *TextLine, x: u32, y: u32) *TextLine {
+    pub fn parentXY(
+        self: *TextLine,
+        x: u32,
+        y: u32,
+    ) *TextLine {
         self.parent_x = x;
         self.parent_y = y;
         return self;
     }
 
     ///
-    pub fn relativeXY(self: *TextLine, x: i32, y: i32) *TextLine {
+    pub fn relativeXY(
+        self: *TextLine,
+        x: i32,
+        y: i32,
+    ) *TextLine {
         self.relative_x = x;
         self.relative_y = y;
         return self;
     }
 
     /// Set background color
-    pub fn bg(self: *TextLine, col_bg: ColorB) *TextLine {
+    pub fn bg(
+        self: *TextLine,
+        col_bg: ColorB,
+    ) *TextLine {
         const b_default = ColorB.initName(
             ColorBU.Default,
         );
@@ -102,7 +140,10 @@ pub const TextLine = struct {
     }
 
     /// Set foreground color
-    pub fn fg(self: *TextLine, col_fg: ColorF) *TextLine {
+    pub fn fg(
+        self: *TextLine,
+        col_fg: ColorF,
+    ) *TextLine {
         const b_default = ColorB.initName(
             ColorBU.Default,
         );
@@ -119,7 +160,10 @@ pub const TextLine = struct {
         return self;
     }
 
-    pub fn setColor(self: *TextLine, color: ?ColorStyle) *TextLine {
+    pub fn setColor(
+        self: *TextLine,
+        color: ?ColorStyle,
+    ) *TextLine {
         self.color = color;
         return self;
     }
@@ -134,8 +178,11 @@ pub const TextLine = struct {
             f_default,
             null,
         );
-        if ((self.absolute_x != null) and (self.absolute_y != null)) {
+        if ((self.absolute_x != null) and //
+            (self.absolute_y != null))
+        {
             _ = Term.cursorTo(
+                self.writer,
                 self.absolute_y.?,
                 self.absolute_x.?,
             );
@@ -145,29 +192,37 @@ pub const TextLine = struct {
             const rx = self.relative_x orelse 0;
             const ry = self.relative_y orelse 0;
             _ = Term.cursorTo(
+                self.writer,
                 py + @abs(ry),
                 px + @abs(rx),
             );
         }
         if (style.modes == null) {
             _ = Term.setColorBF(
+                self.writer,
                 style.bg.?,
                 style.fg.?,
             );
         } else {
-            _ = Term.setColorStyle(style);
+            _ = Term.setColorStyle(
+                self.writer,
+                style,
+            );
         }
         if (self.text != null) {
-            _ = w_out.print(
+            _ = self.writer.writer().print(
                 "{s}",
                 .{self.text.?},
             ) catch unreachable;
         }
         _ = Term.setColorStyle(
+            self.writer,
             ColorStyle{
                 .fg = f_default,
                 .bg = b_default,
-                .modes = ColorModes{ .Reset = true },
+                .modes = ColorModes{
+                    .Reset = true,
+                },
             },
         );
         return self;

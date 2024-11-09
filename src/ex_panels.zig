@@ -20,70 +20,151 @@ const TitlePosition = @import("Panel.zig").PositionTB;
 const StrAU = string_stuff.Alignment;
 const stringAlign = string_stuff.stringAlign;
 
+const BufWriter = @import(
+    "SimpleBufferedWriter.zig",
+).SimpleBufferedWriter;
+
 pub fn main() !void {
+    var buf_writer = BufWriter{};
+    defer _ = buf_writer.flush() catch unreachable;
     libdef.handleSigwinch(0);
     libdef.setSignal();
-    _ = Term.saveTerminalState();
+    _ = Term.saveTerminalState(&buf_writer);
     defer {
-        _ = Term.restoreTerminalState();
+        _ = Term.restoreTerminalState(&buf_writer);
     }
     const old_terminal = libdef.saveTerminalSettings();
     var new_terminal = libdef.saveTerminalSettings();
     defer libdef.restoreTerminalSettings(old_terminal);
     libdef.disableEchoAndCanonicalMode(&new_terminal);
-    _ = Term.disableCursor();
+    _ = Term.disableCursor(&buf_writer);
     defer {
-        _ = Term.enableCursor();
+        _ = Term.enableCursor(&buf_writer);
     }
     defer {
         _ = Term.setColorStyle(
+            &buf_writer,
             ColorStyle{
                 .bg = null,
                 .fg = null,
-                .modes = ColorModes{ .Reset = true },
+                .modes = ColorModes{
+                    .Reset = true,
+                },
             },
         );
     }
-    _ = Term.clearScreen();
+    _ = Term.clearScreen(&buf_writer);
+    _ = buf_writer.flush() catch unreachable;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     var allocator = gpa.allocator();
     // PANEL: ROOT
-    const panel_root = Panel.initRoot("FULL", &libdef.win_width, &libdef.win_height, Layout.Horizontal, &allocator).setBorder(null);
+    const panel_root = Panel.initRoot(
+        "FULL",
+        &libdef.win_width,
+        &libdef.win_height,
+        Layout.Horizontal,
+        &allocator,
+        &buf_writer,
+    ).setBorder(null);
     defer _ = allocator.destroy(panel_root);
     defer _ = panel_root.deinit(&allocator);
     // PANEL: MAIN
-    const panel_main = Panel.init("INFO", panel_root, Layout.Vertical, &allocator);
+    const panel_main = Panel.init(
+        "INFO",
+        panel_root,
+        Layout.Vertical,
+        &allocator,
+    );
     defer _ = allocator.destroy(panel_main);
     defer _ = panel_main.deinit(&allocator);
-    const border_1 = Border.Border.init(&allocator).setBorderStyle(
+    const border_1 = Border.Border.init(
+        &allocator,
+    ).setBorderStyle(
         Border.BorderStyle.LightRound,
     );
     defer _ = allocator.destroy(border_1);
-    _ = panel_main.setBorder(border_1.*).titleLocation(StrAU.Center, TitlePosition.Top);
+    _ = panel_main.setBorder(
+        border_1.*,
+    ).titleLocation(
+        StrAU.Center,
+        TitlePosition.Top,
+    );
     // PANEL: VOID LEFT OF MAIN
-    const panel_main_void_l = Panel.init("VOID L", panel_root, Layout.Vertical, &allocator);
+    const panel_main_void_l = Panel.init(
+        "VOID L",
+        panel_root,
+        Layout.Vertical,
+        &allocator,
+    );
     defer _ = allocator.destroy(panel_main_void_l);
     defer panel_main_void_l.deinit(&allocator);
     // PANEL: VOID RIGHT OF MAIN
-    const panel_main_void_r = Panel.init("VOID R", panel_root, Layout.Vertical, &allocator);
+    const panel_main_void_r = Panel.init(
+        "VOID R",
+        panel_root,
+        Layout.Vertical,
+        &allocator,
+    );
     defer _ = allocator.destroy(panel_main_void_r);
     defer panel_main_void_r.deinit(&allocator);
-    _ = panel_main_void_l.setBorder(border_1.*).titleLocation(StrAU.Left, TitlePosition.Bottom);
-    _ = panel_main_void_r.setBorder(border_1.*).titleLocation(StrAU.Right, TitlePosition.Bottom);
-    _ = panel_root.appendChild(panel_main_void_l, null, 1.0);
-    _ = panel_root.appendChild(panel_main, 30, null);
-    _ = panel_root.appendChild(panel_main_void_r, null, 1.0);
-    var the_app = TheApp.init("Threaded App", panel_root, 20, 15);
-    var thread_heartbeat = try std.Thread.spawn(.{}, doAppHeartBeatThread, .{
-        &the_app,
-    });
+    _ = panel_main_void_l.setBorder(
+        border_1.*,
+    ).titleLocation(
+        StrAU.Left,
+        TitlePosition.Bottom,
+    );
+    _ = panel_main_void_r.setBorder(
+        border_1.*,
+    ).titleLocation(
+        StrAU.Right,
+        TitlePosition.Bottom,
+    );
+    _ = panel_root.appendChild(
+        panel_main_void_l,
+        null,
+        1.0,
+    );
+    _ = panel_root.appendChild(
+        panel_main,
+        30,
+        null,
+    );
+    _ = panel_root.appendChild(
+        panel_main_void_r,
+        null,
+        1.0,
+    );
+    var the_app = TheApp.init(
+        "Threaded App",
+        panel_root,
+        20,
+        15,
+        &buf_writer,
+    );
+    var thread_heartbeat = try std.Thread.spawn(
+        .{},
+        doAppHeartBeatThread,
+        .{
+            &the_app,
+        },
+    );
     defer thread_heartbeat.join();
-    var thread_inputs = try std.Thread.spawn(.{}, doAppInputThread, .{
-        &the_app,
-    });
+    var thread_inputs = try std.Thread.spawn(
+        .{},
+        doAppInputThread,
+        .{
+            &the_app,
+        },
+    );
     defer thread_inputs.join();
-    _ = Term.setColorB(ColorB.initName(ColorBU.Reset));
+    _ = Term.setColorB(
+        &buf_writer,
+        ColorB.initName(
+            ColorBU.Reset,
+        ),
+    );
+    _ = buf_writer.flush() catch unreachable;
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {
@@ -102,8 +183,15 @@ const TheApp = struct {
     width: u8,
     height: u8,
     root_panel: *Panel = undefined,
+    writer: *BufWriter = undefined,
 
-    pub fn init(the_name: []const u8, root_panel: *Panel, width: u8, height: u8) TheApp {
+    pub fn init(
+        the_name: []const u8,
+        root_panel: *Panel,
+        width: u8,
+        height: u8,
+        writer: *BufWriter,
+    ) TheApp {
         return TheApp{
             .name = the_name,
             .is_running = true,
@@ -111,6 +199,7 @@ const TheApp = struct {
             .width = width,
             .height = height,
             .root_panel = root_panel,
+            .writer = writer,
         };
     }
 
@@ -146,7 +235,7 @@ const TheApp = struct {
                     // _ = tl_input.textLine("SPACE").draw();
                 },
                 'q' => {
-                    _ = Term.eraseCES();
+                    _ = Term.eraseCES(self.writer);
                     self.mutex.lock();
                     defer self.mutex.unlock();
                     self.is_running = false;
@@ -198,21 +287,43 @@ const TheApp = struct {
 
     pub fn getHeartBeat(self: *TheApp) !void {
         var counter: u8 = 0;
-        var tl_heart = TextLine.init("♥");
+        var tl_heart = TextLine.init(
+            self.writer,
+            "♥",
+        );
         _ = tl_heart.fg(ColorF.initName(ColorFU.Blue)); //.absXY(0, 5);
-        var tl_panelinfo = TextLine.init("q -- quit/exit");
-        _ = tl_panelinfo.relativeXY(2, 2);
+        var tl_panelinfo = TextLine.init(
+            self.writer,
+            "q -- quit/exit",
+        );
+        _ = tl_panelinfo.relativeXY(
+            2,
+            2,
+        );
         const child_head = self.root_panel.child_head.?;
         const child_2 = child_head.sibling_next.?;
-        _ = tl_heart.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y)).relativeXY(2, 1);
-        _ = tl_panelinfo.parentXY(@abs(child_2.anchor_x), @abs(child_2.anchor_y));
+        _ = tl_heart.parentXY(
+            @abs(child_2.anchor_x),
+            @abs(child_2.anchor_y),
+        ).relativeXY(
+            2,
+            1,
+        );
+        _ = tl_panelinfo.parentXY(
+            @abs(child_2.anchor_x),
+            @abs(child_2.anchor_y),
+        );
         var rt1 = RenderText{
             .parent = child_2,
             .text = &tl_heart,
             .next_text = null,
         };
         _ = child_2.appendText(&rt1);
-        var rt2 = RenderText{ .parent = null, .text = &tl_panelinfo, .next_text = null };
+        var rt2 = RenderText{
+            .parent = null,
+            .text = &tl_panelinfo,
+            .next_text = null,
+        };
         _ = child_2.appendText(&rt2);
         _ = self.root_panel.draw();
         while (true) {
@@ -233,9 +344,13 @@ const TheApp = struct {
                 } else {
                     _ = tl_heart.textLine(" ");
                 }
-                _ = Term.setColorF(ColorF.initName(ColorFU.Default));
+                _ = Term.setColorF(
+                    self.writer,
+                    ColorF.initName(ColorFU.Default),
+                );
             }
             _ = self.root_panel.draw();
+            _ = self.writer.flush() catch unreachable;
         }
     }
 };

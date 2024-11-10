@@ -17,9 +17,7 @@ const BufWriter = @import(
     "SimpleBufferedWriter.zig",
 ).SimpleBufferedWriter;
 
-// const w_out = std.io.getStdOut().writer();
-
-/// TextLine that contains the text, position, style, etc
+/// `TextLine` that contains the text, position, style, etc
 pub const TextLine = struct {
     /// Text to display
     text: ?[]const u8 = undefined,
@@ -40,7 +38,7 @@ pub const TextLine = struct {
     /// Buffered writer
     writer: *BufWriter,
 
-    /// Default TextLine drawn with default colors, etc at
+    /// Default TextLine drawn with default colors, etc
     /// at current location of the cursor
     pub fn init(
         writer: *BufWriter,
@@ -59,6 +57,7 @@ pub const TextLine = struct {
         };
     }
 
+    /// Set the text `line` of the TextLine
     pub fn textLine(
         self: *TextLine,
         line: []const u8,
@@ -67,7 +66,7 @@ pub const TextLine = struct {
         return self;
     }
 
-    ///
+    /// Set `x` in absolute coordinates
     pub fn absX(
         self: *TextLine,
         x: u32,
@@ -76,7 +75,7 @@ pub const TextLine = struct {
         return self;
     }
 
-    ///
+    /// Set `y` in absolute coordinates
     pub fn absY(
         self: *TextLine,
         y: u32,
@@ -85,7 +84,7 @@ pub const TextLine = struct {
         return self;
     }
 
-    ///
+    /// Set `x` and `y` in absolute coordinates
     pub fn absXY(
         self: *TextLine,
         x: u32,
@@ -96,7 +95,7 @@ pub const TextLine = struct {
         return self;
     }
 
-    ///
+    /// Set `x` and `y` of parent element in absolute coordinates
     pub fn parentXY(
         self: *TextLine,
         x: u32,
@@ -107,7 +106,7 @@ pub const TextLine = struct {
         return self;
     }
 
-    ///
+    /// Set `x` and `y` relative to parent element
     pub fn relativeXY(
         self: *TextLine,
         x: i32,
@@ -160,6 +159,7 @@ pub const TextLine = struct {
         return self;
     }
 
+    /// Set color using `ColorStyle`
     pub fn setColor(
         self: *TextLine,
         color: ?ColorStyle,
@@ -168,6 +168,7 @@ pub const TextLine = struct {
         return self;
     }
 
+    /// Draw the `TextLine` object on terminal window
     pub fn draw(self: *TextLine) *TextLine {
         const bu_default = ColorBU.Reset;
         const fu_default = ColorFU.Reset;

@@ -100,6 +100,7 @@ pub fn clearScreen(writer: *BufWriter) void {
     _ = cursorHome(writer);
 }
 
+/// Move terminal cursor to the home position
 pub fn cursorHome(writer: *BufWriter) void {
     _ = writer.writer().print(
         "\x1B[H",
@@ -234,7 +235,7 @@ pub fn setColorBF(
     _ = setColorF(writer, colorF);
 }
 
-/// set foreground color
+/// Set foreground color
 pub fn setColorF(
     writer: *BufWriter,
     color: ColorDef.ColorF,
@@ -265,7 +266,7 @@ pub fn setColorF(
     }
 }
 
-/// set background color
+/// Set background color
 pub fn setColorB(
     writer: *BufWriter,
     color: ColorDef.ColorB,

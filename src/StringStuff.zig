@@ -1,11 +1,13 @@
 const std = @import("std");
 
+/// String alignment
 pub const Alignment = enum {
     None,
     Left,
     Right,
     Center,
 
+    /// Alignment enum to integer value
     pub fn tag(self: Alignment) u8 {
         return switch (self) {
             .None => 0,
@@ -16,10 +18,15 @@ pub const Alignment = enum {
     }
 };
 
+/// Align a string to the left
 pub fn stringLeft(
+    /// string to align
     str: []const u8,
+    /// fill character
     fill: u21,
+    /// length of the line
     len: usize,
+    /// writer to use for string alignment
     writer: anytype,
 ) void {
     _ = std.fmt.formatText(
@@ -34,10 +41,15 @@ pub fn stringLeft(
     ) catch unreachable;
 }
 
+/// Align a string to the right
 pub fn stringRight(
+    /// string to align
     str: []const u8,
+    /// fill character
     fill: u21,
+    /// length of the line
     len: usize,
+    /// writer to use for string alignment
     writer: anytype,
 ) void {
     _ = std.fmt.formatText(
@@ -52,10 +64,15 @@ pub fn stringRight(
     ) catch unreachable;
 }
 
+/// Align a string to the center
 pub fn stringCenter(
+    /// string to align
     str: []const u8,
+    /// fill character
     fill: u21,
+    /// length of the line
     len: usize,
+    /// writer to use for string alignment
     writer: anytype,
 ) void {
     _ = std.fmt.formatText(
@@ -70,11 +87,17 @@ pub fn stringCenter(
     ) catch unreachable;
 }
 
+/// Align string `str` on a line with length `len`
+/// using a given `alignment`
 pub fn stringAlign(
     buf: []u8,
+    /// string to align
     str: []const u8,
+    /// fill character
     fill: u21,
+    /// length of the line
     len: usize,
+    /// alignment type
     alignment: Alignment,
 ) []u8 {
     var stream = std.io.fixedBufferStream(buf);
@@ -123,6 +146,7 @@ pub fn stringAlign(
     return stream.getWritten();
 }
 
+/// Get correct string length for both ASCII and UTF-8 strings
 pub fn stringLen(text: []const u8) usize {
     var utf8_view = std.unicode.Utf8View.init(
         text,

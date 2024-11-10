@@ -17,7 +17,7 @@ pub fn build(b: *std.Build) !void {
 
     const strip_debugging = b.option(bool, "strip", "strip debugging symbols") orelse false;
 
-    const lib = b.addStaticLibrary(.{
+    const lib_term = b.addStaticLibrary(.{
         .name = "terminal",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
@@ -27,11 +27,37 @@ pub fn build(b: *std.Build) !void {
         .strip = strip_debugging,
     });
 
+    _ = b.addModule("tui", .{
+        .root_source_file = b.path("src/tui.zig"),
+        .target = target,
+        .optimize = optimize,
+        .strip = strip_debugging,
+    });
+
+    const obj_tui = b.addObject(.{
+        .name = "tui",
+        .root_source_file = b.path("src/tui.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const install_docs = b.addInstallDirectory(.{
+        .source_dir = obj_tui.getEmittedDocs(),
+        .install_dir = .{
+            .custom = "..",
+        },
+        // .install_dir = .prefix,
+        .install_subdir = "docs",
+    });
+
+    const docs_step = b.step("docs", "Generate documentation");
+    docs_step.dependOn(&install_docs.step);
+
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
-    lib.linkLibC();
-    b.installArtifact(lib);
+    lib_term.linkLibC();
+    b.installArtifact(lib_term);
 
     // const exe = b.addExecutable(.{
     //     .name = "simple-text-ui-for-zig",
@@ -55,7 +81,7 @@ pub fn build(b: *std.Build) !void {
                 .optimize = optimize,
                 .strip = strip_debugging,
             });
-            examples.linkLibrary(lib);
+            examples.linkLibrary(lib_term);
             // examples.linkLibC();
             b.installArtifact(examples);
         }

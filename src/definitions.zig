@@ -23,8 +23,13 @@ pub extern fn restoreTerminalSettings(arg_oldt: struct_termios) void;
 pub extern fn disableEchoAndCanonicalMode(arg_state: [*c]struct_termios) void;
 // pub extern fn get_terminal_size() struct_winsize;
 pub const sig_atomic_t = c_int;
+/// Size of terminal window (width)
 pub extern var win_width: sig_atomic_t;
+/// Size of terminal window (height)
 pub extern var win_height: sig_atomic_t;
+/// Capture SIGINT and ignore it (disable CTRL-C)
 pub extern fn setup_sigint() void;
+/// Capture SIGWINCH
 pub extern fn setup_sigwinch() void;
+/// Calculate new `win_width` and `win_height` when window size changes
 pub extern fn handleSigwinch(sig: c_int) void;

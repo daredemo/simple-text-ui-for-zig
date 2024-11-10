@@ -1,9 +1,13 @@
 const std = @import("std");
 
+/// A simple custom writer with a buffer
 pub const SimpleBufferedWriter = struct {
+    /// maximum size of buffer
     size: usize = 4096,
+    /// the buffer
     list: std.BoundedArray(u8, 4096) = .{},
 
+    /// The Writer
     const Writer = std.io.Writer(
         *SimpleBufferedWriter,
         error{ EndOfBuffer, Overflow },

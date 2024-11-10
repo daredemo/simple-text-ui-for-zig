@@ -1,8 +1,10 @@
+/// Color as R, G, and B (red, green, blue)
 pub const RGB = struct {
     r: u8,
     g: u8,
     b: u8,
 
+    /// Initialization
     pub fn init(r: u8, g: u8, b: u8) RGB {
         return RGB{
             .r = r,
@@ -12,7 +14,7 @@ pub const RGB = struct {
     }
 };
 
-/// Foreground colors
+/// Foreground colors by name
 pub const ColorFU = enum {
     Reset,
     Black,
@@ -33,6 +35,7 @@ pub const ColorFU = enum {
     BrightCyan,
     BrightWhite,
 
+    /// Convert color name to an integer
     pub fn tag(self: ColorFU) u8 {
         return switch (self) {
             .Reset => 0,
@@ -57,7 +60,7 @@ pub const ColorFU = enum {
     }
 };
 
-/// Background colors
+/// Background colors by name
 pub const ColorBU = enum {
     Reset,
     Black,
@@ -78,6 +81,7 @@ pub const ColorBU = enum {
     BrightCyan,
     BrightWhite,
 
+    /// Convert color name to an integer
     pub fn tag(self: ColorBU) u8 {
         return switch (self) {
             .Reset => 0,
@@ -166,11 +170,13 @@ pub const ColorModes = struct {
 //     }
 // };
 
+/// Color as either a name, a numeric value or a RGB value
 pub const ColorU = union(enum) {
     name,
     value,
     rgb,
 
+    /// Convert chosen color type to an integer value
     pub fn tag(self: ColorU) u8 {
         return switch (self) {
             .name => 0,
@@ -180,12 +186,18 @@ pub const ColorU = union(enum) {
     }
 };
 
+/// Background color as either name, value or RGB
 pub const ColorB = struct {
+    /// Color name
     name: ?ColorBU = undefined,
+    /// Color numeric value
     value: ?u8 = undefined,
+    /// Color RGB value
     rgb: ?RGB = undefined,
+    /// Which value to use: name, value or rgb?
     type_data: ColorU,
 
+    /// Initialization by color name
     pub fn initName(name: ColorBU) ColorB {
         return ColorB{
             .name = name,
@@ -197,6 +209,7 @@ pub const ColorB = struct {
         };
     }
 
+    /// Initialization by color as numeric value
     pub fn initValue(value: u8) ColorB {
         return ColorB{
             .name = null,
@@ -208,6 +221,7 @@ pub const ColorB = struct {
         };
     }
 
+    /// Initialization by color as RGB
     pub fn initRGB(rgb: RGB) ColorB {
         return ColorB{
             .name = null,
@@ -220,12 +234,18 @@ pub const ColorB = struct {
     }
 };
 
+/// Foreground color as either name, value or RGB
 pub const ColorF = struct {
+    /// Color name
     name: ?ColorFU = undefined,
+    /// Color numeric value
     value: ?u8 = undefined,
+    /// Color RGB value
     rgb: ?RGB = undefined,
+    /// Which value to use: name, value or rgb?
     type_data: ColorU,
 
+    /// Initialization by color name
     pub fn initName(name: ColorFU) ColorF {
         return ColorF{
             .name = name,
@@ -237,6 +257,7 @@ pub const ColorF = struct {
         };
     }
 
+    /// Initialization by color as numeric value
     pub fn initValue(value: u8) ColorF {
         return ColorF{
             .name = null,
@@ -248,6 +269,7 @@ pub const ColorF = struct {
         };
     }
 
+    /// Initialization by color as RGB
     pub fn initRGB(rgb: RGB) ColorF {
         return ColorF{
             .name = null,
@@ -260,11 +282,16 @@ pub const ColorF = struct {
     }
 };
 
+/// Color as a style (background, foreground, modes)
 pub const ColorStyle = struct {
+    /// Background color
     bg: ?ColorB = undefined,
+    /// Foreground color
     fg: ?ColorF = undefined,
+    /// Color/style modes (bold, italic, etc)
     modes: ?ColorModes = undefined,
 
+    /// Initialization
     pub fn init(
         bg: ?ColorB,
         fg: ?ColorF,

@@ -34,13 +34,6 @@ pub fn build(b: *std.Build) !void {
         .strip = strip_debugging,
     });
 
-    const module_clevel = b.addModule("clevel", .{
-        .root_source_file = b.path("src/cTermio.zig"),
-        .target = target,
-        .optimize = optimize,
-        .strip = strip_debugging,
-    });
-
     const obj_tui = b.addObject(.{
         .name = "tui",
         .root_source_file = b.path("src/tui.zig"),
@@ -63,7 +56,6 @@ pub fn build(b: *std.Build) !void {
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
-    module_clevel.linkLibC();
     lib_term.linkLibC();
     b.installArtifact(lib_term);
 

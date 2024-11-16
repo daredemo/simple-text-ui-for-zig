@@ -44,7 +44,7 @@ pub fn build(b: *std.Build) !void {
     const install_docs = b.addInstallDirectory(.{
         .source_dir = obj_tui.getEmittedDocs(),
         .install_dir = .{
-            .custom = "..",
+            .custom = "../",
         },
         // .install_dir = .prefix,
         .install_subdir = "docs",

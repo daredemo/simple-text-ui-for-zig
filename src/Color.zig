@@ -197,9 +197,11 @@ pub const ColorB = struct {
     /// Which value to use: name, value or rgb?
     type_data: ColorU,
 
+    const Self = @This();
+
     /// Initialization by color name
-    pub fn initName(name: ColorBU) ColorB {
-        return ColorB{
+    pub fn initName(name: ColorBU) Self {
+        return Self{
             .name = name,
             .value = null,
             .rgb = null,
@@ -210,8 +212,8 @@ pub const ColorB = struct {
     }
 
     /// Initialization by color as numeric value
-    pub fn initValue(value: u8) ColorB {
-        return ColorB{
+    pub fn initValue(value: u8) Self {
+        return Self{
             .name = null,
             .value = value,
             .rgb = null,
@@ -222,8 +224,8 @@ pub const ColorB = struct {
     }
 
     /// Initialization by color as RGB
-    pub fn initRGB(rgb: RGB) ColorB {
-        return ColorB{
+    pub fn initRGB(rgb: RGB) Self {
+        return Self{
             .name = null,
             .value = null,
             .rgb = rgb,
@@ -245,9 +247,11 @@ pub const ColorF = struct {
     /// Which value to use: name, value or rgb?
     type_data: ColorU,
 
+    const Self = @This();
+
     /// Initialization by color name
-    pub fn initName(name: ColorFU) ColorF {
-        return ColorF{
+    pub fn initName(name: ColorFU) Self {
+        return Self{
             .name = name,
             .value = null,
             .rgb = null,
@@ -258,8 +262,8 @@ pub const ColorF = struct {
     }
 
     /// Initialization by color as numeric value
-    pub fn initValue(value: u8) ColorF {
-        return ColorF{
+    pub fn initValue(value: u8) Self {
+        return Self{
             .name = null,
             .value = value,
             .rgb = null,
@@ -270,8 +274,8 @@ pub const ColorF = struct {
     }
 
     /// Initialization by color as RGB
-    pub fn initRGB(rgb: RGB) ColorF {
-        return ColorF{
+    pub fn initRGB(rgb: RGB) Self {
+        return Self{
             .name = null,
             .value = null,
             .rgb = rgb,
@@ -291,13 +295,15 @@ pub const ColorStyle = struct {
     /// Color/style modes (bold, italic, etc)
     modes: ?ColorModes = undefined,
 
+    const Self = @This();
+
     /// Initialization
     pub fn init(
         bg: ?ColorB,
         fg: ?ColorF,
         modes: ?ColorModes,
-    ) ColorStyle {
-        return ColorStyle{
+    ) Self {
+        return Self{
             .bg = bg,
             .fg = fg,
             .modes = modes,

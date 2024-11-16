@@ -11,15 +11,17 @@ pub const Face = struct {
     /// Current direction (default: right)
     face: FaceE = FaceE.Right,
 
+    const Self = @This();
+
     /// Initialization
-    pub fn init(face: FaceE) Face {
-        return Face{
+    pub fn init(face: FaceE) Self {
+        return Self{
             .face = face,
         };
     }
 
     /// Direction opposite to current direction
-    pub fn opposite(self: *Face) FaceE {
+    pub fn opposite(self: *Self) FaceE {
         return switch (self.face) {
             FaceE.Up => FaceE.Down,
             FaceE.Down => FaceE.Up,
@@ -34,12 +36,14 @@ pub const Location = struct {
     x: i32 = undefined,
     y: i32 = undefined,
 
+    const Self = @This();
+
     /// Initialization
     pub fn init(
         x: i32,
         y: i32,
-    ) Location {
-        return Location{
+    ) Self {
+        return Self{
             .x = x,
             .y = y,
         };
@@ -47,9 +51,9 @@ pub const Location = struct {
 
     /// Move location based on current location and movement
     pub fn moveTo(
-        self: Location,
+        self: Self,
         face: FaceE,
-    ) Location {
+    ) Self {
         var f = self;
         switch (face) {
             FaceE.Up => f.y -= 1,
@@ -62,7 +66,7 @@ pub const Location = struct {
 
     /// Is current location inbounds
     pub fn inBounds(
-        self: Location,
+        self: Self,
         max_width: i32,
         max_height: i32,
     ) bool {
@@ -74,8 +78,8 @@ pub const Location = struct {
 
     /// Compare two locations
     pub fn equal(
-        self: Location,
-        value: Location,
+        self: Self,
+        value: Self,
     ) bool {
         if ((self.x == value.x) and //
             (self.y == value.y))

@@ -49,8 +49,10 @@ pub const PositionTB = enum {
     Bottom,
     Center,
 
+    const Self = @This();
+
     /// Get the numeric value of the position
-    pub fn tag(self: PositionTB) u8 {
+    pub fn tag(self: Self) u8 {
         return switch (self) {
             .None => 0,
             .Top => 1,
@@ -66,8 +68,10 @@ pub const RenderText = struct {
     text: *TextLine = undefined,
     next_text: ?*RenderText = null,
 
+    const Self = @This();
+
     /// Draw RenderText items
-    pub fn draw(self: *RenderText) void {
+    pub fn draw(self: *Self) void {
         if (self.parent != null) {
             const p = self.parent.?;
             if (p.writer.list.len > 3072) {
@@ -98,8 +102,10 @@ pub const RenderTextArray = struct {
     coordinates: *std.ArrayList(Location) = undefined,
     next_array: ?*RenderTextArray = null,
 
+    const Self = @This();
+
     /// Draw RenderTextArray items
-    pub fn draw(self: *RenderTextArray) void {
+    pub fn draw(self: *Self) void {
         // _ = self;
         if (self.parent != null) {
             const p = self.parent.?;
@@ -192,17 +198,19 @@ pub const Panel = struct {
         f32,
     ) = undefined,
 
+    const Self = @This();
+
     /// Initialize a sub-panel
     pub fn init(
         title: ?[]const u8,
-        parent: *Panel,
+        parent: *Self,
         layout: Layout,
         allocator: *std.mem.Allocator,
-    ) *Panel {
+    ) *Self {
         const panel = allocator.create(
-            Panel,
+            Self,
         ) catch unreachable;
-        panel.* = Panel{
+        panel.* = Self{
             .title = title,
             .title_position = PositionTB.None,
             .title_align = TAN,
@@ -244,11 +252,11 @@ pub const Panel = struct {
         layout: Layout,
         allocator: *std.mem.Allocator,
         writer: *BufWriter,
-    ) *Panel {
+    ) *Self {
         const panel = allocator.create(
-            Panel,
+            Self,
         ) catch unreachable;
-        panel.* = Panel{
+        panel.* = Self{
             .title = title,
             .title_position = PositionTB.None,
             .title_align = TAN,
@@ -286,7 +294,7 @@ pub const Panel = struct {
 
     /// Clean up memory
     pub fn deinit(
-        self: *Panel,
+        self: *Self,
         allocator: *std.mem.Allocator,
     ) void {
         _ = allocator.destroy(&self.ch_sizes_absolute);
@@ -295,11 +303,11 @@ pub const Panel = struct {
 
     /// Add a new child to the end of children's list
     pub fn appendChild(
-        self: *Panel,
-        child: *Panel,
+        self: *Self,
+        child: *Self,
         absolute_size: ?i32,
         relative_size: ?f32,
-    ) *Panel {
+    ) *Self {
         var the_child = child;
         the_child.full_width = self.full_width;
         the_child.full_height = self.full_height;
@@ -329,9 +337,9 @@ pub const Panel = struct {
 
     /// Find the last child of the current panel
     pub fn getLastChild(
-        self: *Panel,
-        child: ?*Panel,
-    ) ?*Panel {
+        self: *Self,
+        child: ?*Self,
+    ) ?*Self {
         if (child == null) {
             return null;
         } else {
@@ -348,9 +356,9 @@ pub const Panel = struct {
 
     /// Add a new child to the end of children's list
     pub fn appendText(
-        self: *Panel,
+        self: *Self,
         child: *RenderText,
-    ) *Panel {
+    ) *Self {
         var the_child = child;
         the_child.parent = self;
         if (self.render_text_next == null) {
@@ -367,7 +375,7 @@ pub const Panel = struct {
 
     /// Find the last child of the current panel
     pub fn getLastText(
-        self: *Panel,
+        self: *Self,
         child: ?*RenderText,
     ) ?*RenderText {
         if (child == null) {
@@ -386,9 +394,9 @@ pub const Panel = struct {
 
     /// Add a new child to the end of children's list
     pub fn appendArray(
-        self: *Panel,
+        self: *Self,
         child: *RenderTextArray,
-    ) *Panel {
+    ) *Self {
         var the_child = child;
         the_child.parent = self;
         if (self.render_array_next == null) {
@@ -403,7 +411,7 @@ pub const Panel = struct {
 
     /// Find the last child of the current panel
     pub fn getLastArray(
-        self: *Panel,
+        self: *Self,
         child: ?*RenderTextArray,
     ) ?*RenderTextArray {
         if (child == null) {
@@ -422,10 +430,10 @@ pub const Panel = struct {
 
     /// Set title's location (h: left, center, right; v: top, center, bottom)
     pub fn titleLocation(
-        self: *Panel,
+        self: *Self,
         horizontal: ?TextAlign,
         vertical: ?PositionTB,
-    ) *Panel {
+    ) *Self {
         if (horizontal != null) {
             const a = horizontal.?;
             self.title_align = a;
@@ -439,25 +447,25 @@ pub const Panel = struct {
 
     /// Set minimum width when panel is rendered
     pub fn setMinWidth(
-        self: *Panel,
+        self: *Self,
         width: i32,
-    ) *Panel {
+    ) *Self {
         self.minimum_width = width;
         return self;
     }
 
     /// Set minimum height when panel is rendered
     pub fn setMinHeight(
-        self: *Panel,
+        self: *Self,
         height: i32,
-    ) *Panel {
+    ) *Self {
         self.minimum_height = height;
         return self;
     }
 
     /// Update panel sizes according to current screen size
     /// and the size of parent panels with layout and border directives
-    pub fn update(self: *Panel) *Panel {
+    pub fn update(self: *Self) *Self {
         if (self.parent == null) {
             self.width = self.parent_width.*;
             self.height = self.parent_height.*;
@@ -590,15 +598,15 @@ pub const Panel = struct {
 
     /// Configure the border settings
     pub fn setBorder(
-        self: *Panel,
+        self: *Self,
         border: ?Border,
-    ) *Panel {
+    ) *Self {
         self.border = border;
         return self;
     }
 
     /// Draw the panes
-    pub fn draw(self: *Panel) *Panel {
+    pub fn draw(self: *Self) *Self {
         _ = self.update();
         if (self.parent == null) {
             _ = Term.clearScreen(self.writer);

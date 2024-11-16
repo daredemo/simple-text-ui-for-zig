@@ -38,13 +38,15 @@ pub const TextLine = struct {
     /// Buffered writer
     writer: *BufWriter,
 
+    const Self = @This();
+
     /// Default TextLine drawn with default colors, etc
     /// at current location of the cursor
     pub fn init(
         writer: *BufWriter,
         text: []const u8,
-    ) TextLine {
-        return TextLine{
+    ) Self {
+        return Self{
             .text = text,
             .parent_x = null,
             .parent_y = null,
@@ -59,37 +61,37 @@ pub const TextLine = struct {
 
     /// Set the text `line` of the TextLine
     pub fn textLine(
-        self: *TextLine,
+        self: *Self,
         line: []const u8,
-    ) *TextLine {
+    ) *Self {
         self.text = line;
         return self;
     }
 
     /// Set `x` in absolute coordinates
     pub fn absX(
-        self: *TextLine,
+        self: *Self,
         x: u32,
-    ) *TextLine {
+    ) *Self {
         self.absolute_x = x;
         return self;
     }
 
     /// Set `y` in absolute coordinates
     pub fn absY(
-        self: *TextLine,
+        self: *Self,
         y: u32,
-    ) *TextLine {
+    ) *Self {
         self.absolute_y = y;
         return self;
     }
 
     /// Set `x` and `y` in absolute coordinates
     pub fn absXY(
-        self: *TextLine,
+        self: *Self,
         x: u32,
         y: u32,
-    ) *TextLine {
+    ) *Self {
         self.absolute_x = x;
         self.absolute_y = y;
         return self;
@@ -97,10 +99,10 @@ pub const TextLine = struct {
 
     /// Set `x` and `y` of parent element in absolute coordinates
     pub fn parentXY(
-        self: *TextLine,
+        self: *Self,
         x: u32,
         y: u32,
-    ) *TextLine {
+    ) *Self {
         self.parent_x = x;
         self.parent_y = y;
         return self;
@@ -108,10 +110,10 @@ pub const TextLine = struct {
 
     /// Set `x` and `y` relative to parent element
     pub fn relativeXY(
-        self: *TextLine,
+        self: *Self,
         x: i32,
         y: i32,
-    ) *TextLine {
+    ) *Self {
         self.relative_x = x;
         self.relative_y = y;
         return self;
@@ -119,9 +121,9 @@ pub const TextLine = struct {
 
     /// Set background color
     pub fn bg(
-        self: *TextLine,
+        self: *Self,
         col_bg: ColorB,
-    ) *TextLine {
+    ) *Self {
         const b_default = ColorB.initName(
             ColorBU.Default,
         );
@@ -140,9 +142,9 @@ pub const TextLine = struct {
 
     /// Set foreground color
     pub fn fg(
-        self: *TextLine,
+        self: *Self,
         col_fg: ColorF,
-    ) *TextLine {
+    ) *Self {
         const b_default = ColorB.initName(
             ColorBU.Default,
         );
@@ -161,15 +163,15 @@ pub const TextLine = struct {
 
     /// Set color using `ColorStyle`
     pub fn setColor(
-        self: *TextLine,
+        self: *Self,
         color: ?ColorStyle,
-    ) *TextLine {
+    ) *Self {
         self.color = color;
         return self;
     }
 
     /// Draw the `TextLine` object on terminal window
-    pub fn draw(self: *TextLine) *TextLine {
+    pub fn draw(self: *Self) *Self {
         const bu_default = ColorBU.Reset;
         const fu_default = ColorFU.Reset;
         const b_default = ColorB.initName(bu_default);

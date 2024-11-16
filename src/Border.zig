@@ -139,14 +139,16 @@ pub const Border = struct {
     bottom_right: ?u21 = undefined,
     color: ?ColorStyle = undefined,
 
+    const Self = @This();
+
     /// Initialize as borderless
     pub fn init(
         allocator: *std.mem.Allocator,
-    ) *Border {
+    ) *Self {
         const border = allocator.create(
-            Border,
+            Self,
         ) catch unreachable;
-        border.* = Border{
+        border.* = Self{
             .left = null,
             .top = null,
             .right = null,
@@ -161,84 +163,84 @@ pub const Border = struct {
 
     /// Set color by color style
     pub fn setColor(
-        self: *Border,
+        self: *Self,
         color: ColorStyle,
-    ) *Border {
+    ) *Self {
         self.color = color;
         return self;
     }
 
     /// Set top border character/symbol
     pub fn setTop(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.top = v;
         return self;
     }
     /// Set bottom border character/symbol
     pub fn setBottom(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.bottom = v;
         return self;
     }
     /// Set left border character/symbol
     pub fn setLeft(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.left = v;
         return self;
     }
     /// Set right border character/symbol
     pub fn setRight(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.right = v;
         return self;
     }
     /// Set top-left border character/symbol
     pub fn setTopLeft(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.top_left = v;
         return self;
     }
     /// Set top-right border character/symbol
     pub fn setTopRight(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.top_right = v;
         return self;
     }
     /// Set bottom-left border character/symbol
     pub fn setBottomLeft(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.bottom_left = v;
         return self;
     }
     /// Set bottom-right border character/symbol
     pub fn setBottomRight(
-        self: *Border,
+        self: *Self,
         v: ?u21,
-    ) *Border {
+    ) *Self {
         self.bottom_right = v;
         return self;
     }
     /// Set top border characters/symbols
     pub fn setTopAll(
-        self: *Border,
+        self: *Self,
         l: ?u21,
         c: ?u21,
         r: ?u21,
-    ) *Border {
+    ) *Self {
         self.top_left = l;
         self.top = c;
         self.top_right = r;
@@ -246,11 +248,11 @@ pub const Border = struct {
     }
     /// Set bottom border characters/symbols
     pub fn setBottomAll(
-        self: *Border,
+        self: *Self,
         l: ?u21,
         c: ?u21,
         r: ?u21,
-    ) *Border {
+    ) *Self {
         self.bottom_left = l;
         self.bottom = c;
         self.bottom_right = r;
@@ -258,11 +260,11 @@ pub const Border = struct {
     }
     /// Set left border characters/symbols
     pub fn setLeftAll(
-        self: *Border,
+        self: *Self,
         l: ?u21,
         c: ?u21,
         r: ?u21,
-    ) *Border {
+    ) *Self {
         self.top_left = l;
         self.left = c;
         self.bottom_left = r;
@@ -270,11 +272,11 @@ pub const Border = struct {
     }
     /// Set right border characters/symbols
     pub fn setRightAll(
-        self: *Border,
+        self: *Self,
         l: ?u21,
         c: ?u21,
         r: ?u21,
-    ) *Border {
+    ) *Self {
         self.top_right = l;
         self.right = c;
         self.bottom_right = r;
@@ -282,9 +284,9 @@ pub const Border = struct {
     }
     /// Set border style to set all border characters/symbols
     pub fn setBorderStyle(
-        self: *Border,
+        self: *Self,
         style: BorderStyle,
-    ) *Border {
+    ) *Self {
         const tags = style.tag();
         self.top = tags.horizontal;
         self.bottom = tags.horizontal;

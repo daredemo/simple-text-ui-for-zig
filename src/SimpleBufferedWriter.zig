@@ -7,17 +7,19 @@ pub const SimpleBufferedWriter = struct {
     /// the buffer
     list: std.BoundedArray(u8, 4096) = .{},
 
+    const Self = @This();
+
     /// The Writer
     const Writer = std.io.Writer(
-        *SimpleBufferedWriter,
+        *Self,
         error{ EndOfBuffer, Overflow },
         appendWrite,
     );
 
     /// clear the buffer
     pub fn clear(
-        self: *SimpleBufferedWriter,
-    ) !*SimpleBufferedWriter {
+        self: *Self,
+    ) !*Self {
         if (self.list.len > 0) {
             _ = try self.list.resize(0);
         }
@@ -26,8 +28,8 @@ pub const SimpleBufferedWriter = struct {
 
     /// write the buffer to stdout and clear the buffer
     pub fn flush(
-        self: *SimpleBufferedWriter,
-    ) !*SimpleBufferedWriter {
+        self: *Self,
+    ) !*Self {
         if (self.list.len > 0) {
             _ = try std.io.getStdOut().writer().print(
                 "{s}",
@@ -40,7 +42,7 @@ pub const SimpleBufferedWriter = struct {
 
     /// writeFn (std.io.Writer)
     pub fn appendWrite(
-        self: *SimpleBufferedWriter,
+        self: *Self,
         data: []const u8,
     ) error{ EndOfBuffer, Overflow }!usize {
         if (self.list.len + data.len > self.size) {
@@ -55,7 +57,7 @@ pub const SimpleBufferedWriter = struct {
 
     /// writer (std.io.Writer)
     pub fn writer(
-        self: *SimpleBufferedWriter,
+        self: *Self,
     ) Writer {
         return .{ .context = self };
     }

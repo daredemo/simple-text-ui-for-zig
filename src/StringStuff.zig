@@ -88,7 +88,7 @@ pub fn stringCenter(
 }
 
 /// Align string `str` on a line with length `len`
-/// using a given `alignment`
+/// using a given
 pub fn stringAlign(
     buf: []u8,
     /// string to align
@@ -97,7 +97,6 @@ pub fn stringAlign(
     fill: u21,
     /// length of the line
     len: usize,
-    /// alignment type
     alignment: Alignment,
 ) []u8 {
     var stream = std.io.fixedBufferStream(buf);
@@ -146,7 +145,6 @@ pub fn stringAlign(
     return stream.getWritten();
 }
 
-/// Get correct string length for both ASCII and UTF-8 strings
 pub fn stringLen(text: []const u8) usize {
     var utf8_view = std.unicode.Utf8View.init(
         text,

@@ -212,10 +212,10 @@ pub const TextLine = struct {
                 style,
             );
         }
-        if (self.text != null) {
+        if (self.text) |txt| {
             _ = self.writer.writer().print(
                 "{s}",
-                .{self.text.?},
+                .{txt},
             ) catch unreachable;
         }
         _ = Term.setColorStyle(

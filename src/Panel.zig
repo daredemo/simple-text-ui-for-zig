@@ -72,8 +72,7 @@ pub const RenderText = struct {
 
     /// Draw RenderText items
     pub fn draw(self: *Self) void {
-        if (self.parent != null) {
-            const p = self.parent.?;
+        if (self.parent) |p| {
             if (p.writer.list.len > 3072) {
                 _ = p.writer.flush() catch unreachable;
             }
@@ -83,8 +82,8 @@ pub const RenderText = struct {
             );
         }
         _ = self.text.draw();
-        if (self.next_text != null) {
-            _ = self.next_text.?.draw();
+        if (self.next_text) |n| {
+            _ = n.draw();
         }
     }
 };
@@ -106,9 +105,7 @@ pub const RenderTextArray = struct {
 
     /// Draw RenderTextArray items
     pub fn draw(self: *Self) void {
-        // _ = self;
-        if (self.parent != null) {
-            const p = self.parent.?;
+        if (self.parent) |p| {
             if (p.writer.list.len > 3072) {
                 _ = p.writer.flush() catch unreachable;
             }
@@ -116,25 +113,35 @@ pub const RenderTextArray = struct {
                 @as(u32, @abs(p.anchor_x)),
                 @as(u32, @abs(p.anchor_y)),
             );
-        }
-        for (self.coordinates.items, 0..) |item, index| {
-            const p = self.parent.?;
-            const nx: i32 = item.x * self.multi_x + self.delta_x;
-            const ny: i32 = item.y * self.multi_y + self.delta_y;
-            if (p.writer.list.len > 3072) {
-                _ = p.writer.flush() catch unreachable;
-            }
-            if (index == 0) {
-                if (self.text_first != null) {
-                    _ = self.text_first.?.parentXY(
-                        @as(u32, @abs(p.anchor_x)),
-                        @as(u32, @abs(p.anchor_y)),
-                    );
-                    _ = self.text_first.?.relativeXY(
-                        nx,
-                        ny,
-                    );
-                    _ = self.text_first.?.draw();
+            // }
+            for (self.coordinates.items, 0..) |item, index| {
+                const nx: i32 = item.x * self.multi_x + self.delta_x;
+                const ny: i32 = item.y * self.multi_y + self.delta_y;
+                if (p.writer.list.len > 3072) {
+                    _ = p.writer.flush() catch unreachable;
+                }
+                if (index == 0) {
+                    if (self.text_first != null) {
+                        _ = self.text_first.?.parentXY(
+                            @as(u32, @abs(p.anchor_x)),
+                            @as(u32, @abs(p.anchor_y)),
+                        );
+                        _ = self.text_first.?.relativeXY(
+                            nx,
+                            ny,
+                        );
+                        _ = self.text_first.?.draw();
+                    } else {
+                        _ = self.text.parentXY(
+                            @as(u32, @abs(p.anchor_x)),
+                            @as(u32, @abs(p.anchor_y)),
+                        );
+                        _ = self.text.relativeXY(
+                            nx,
+                            ny,
+                        );
+                        _ = self.text.draw();
+                    }
                 } else {
                     _ = self.text.parentXY(
                         @as(u32, @abs(p.anchor_x)),
@@ -146,21 +153,11 @@ pub const RenderTextArray = struct {
                     );
                     _ = self.text.draw();
                 }
-            } else {
-                _ = self.text.parentXY(
-                    @as(u32, @abs(p.anchor_x)),
-                    @as(u32, @abs(p.anchor_y)),
-                );
-                _ = self.text.relativeXY(
-                    nx,
-                    ny,
-                );
-                _ = self.text.draw();
             }
+            _ = p.writer.flush() catch unreachable;
         }
-        _ = self.parent.?.writer.flush() catch unreachable;
-        if (self.next_array != null) {
-            _ = self.next_array.?.draw();
+        if (self.next_array) |n| {
+            _ = n.draw();
         }
     }
 };
@@ -319,11 +316,13 @@ pub const Panel = struct {
         if (self.child_head == null) {
             self.child_head = the_child;
         } else {
-            const current_child = self.child_head.?;
-            var last_child = self.getLastChild(
-                current_child,
-            ).?;
-            last_child.sibling_next = the_child;
+            if (self.child_head) |current_child| {
+                if (self.getLastChild(
+                    current_child,
+                )) |last_child| {
+                    last_child.sibling_next = the_child;
+                }
+            }
         }
         _ = self.ch_sizes_absolute.append(
             s_abs,
@@ -340,17 +339,14 @@ pub const Panel = struct {
         self: *Self,
         child: ?*Self,
     ) ?*Self {
-        if (child == null) {
-            return null;
-        } else {
-            const theChild = child.?;
-            if (theChild.sibling_next == null) {
-                return theChild;
+        if (child) |the_child| {
+            if (the_child.sibling_next) |n| {
+                return self.getLastChild(n);
             } else {
-                return self.getLastChild(
-                    theChild.sibling_next,
-                );
+                return the_child;
             }
+        } else {
+            return null;
         }
     }
 
@@ -361,14 +357,12 @@ pub const Panel = struct {
     ) *Self {
         var the_child = child;
         the_child.parent = self;
-        if (self.render_text_next == null) {
-            self.render_text_next = the_child;
+        if (self.render_text_next) |current_child| {
+            if (self.getLastText(current_child)) |last_child| {
+                last_child.next_text = the_child;
+            }
         } else {
-            const current_child = self.render_text_next.?;
-            var last_child = self.getLastText(
-                current_child,
-            ).?;
-            last_child.next_text = the_child;
+            self.render_text_next = the_child;
         }
         return self;
     }
@@ -378,17 +372,14 @@ pub const Panel = struct {
         self: *Self,
         child: ?*RenderText,
     ) ?*RenderText {
-        if (child == null) {
-            return null;
-        } else {
-            const theChild = child.?;
-            if (theChild.next_text == null) {
-                return theChild;
+        if (child) |the_child| {
+            if (the_child.next_text) |n| {
+                return self.getLastText(n);
             } else {
-                return self.getLastText(
-                    theChild.next_text,
-                );
+                return the_child;
             }
+        } else {
+            return null;
         }
     }
 
@@ -399,12 +390,12 @@ pub const Panel = struct {
     ) *Self {
         var the_child = child;
         the_child.parent = self;
-        if (self.render_array_next == null) {
-            self.render_array_next = the_child;
+        if (self.render_array_next) |current_child| {
+            if (self.getLastArray(current_child)) |last_child| {
+                last_child.next_array = the_child;
+            }
         } else {
-            const current_child = self.render_array_next.?;
-            var last_child = self.getLastArray(current_child).?;
-            last_child.next_array = the_child;
+            self.render_array_next = the_child;
         }
         return self;
     }
@@ -414,17 +405,14 @@ pub const Panel = struct {
         self: *Self,
         child: ?*RenderTextArray,
     ) ?*RenderTextArray {
-        if (child == null) {
-            return null;
-        } else {
-            const theChild = child.?;
-            if (theChild.next_array == null) {
-                return theChild;
+        if (child) |the_child| {
+            if (the_child.next_array) |n| {
+                return self.getLastArray(n);
             } else {
-                return self.getLastArray(
-                    theChild.next_array,
-                );
+                return the_child;
             }
+        } else {
+            return null;
         }
     }
 
@@ -434,13 +422,11 @@ pub const Panel = struct {
         horizontal: ?TextAlign,
         vertical: ?PositionTB,
     ) *Self {
-        if (horizontal != null) {
-            const a = horizontal.?;
-            self.title_align = a;
+        if (horizontal) |h| {
+            self.title_align = h;
         }
-        if (vertical != null) {
-            const p = vertical.?;
-            self.title_position = p;
+        if (vertical) |v| {
+            self.title_position = v;
         }
         return self;
     }
@@ -466,19 +452,13 @@ pub const Panel = struct {
     /// Update panel sizes according to current screen size
     /// and the size of parent panels with layout and border directives
     pub fn update(self: *Self) *Self {
-        if (self.parent == null) {
-            self.width = self.parent_width.*;
-            self.height = self.parent_height.*;
-            self.anchor_x = 1;
-            self.anchor_y = 1;
-        } else {
-            const p = self.parent.?;
+        if (self.parent) |p| {
             const the_border = p.border orelse null;
             const the_layout = p.layout;
             if (the_layout == Layout.Vertical) {
-                if (the_border != null) {
-                    const w_l = the_border.?.left != null;
-                    const w_r = the_border.?.right != null;
+                if (the_border) |tb| {
+                    const w_l = tb.left != null;
+                    const w_r = tb.right != null;
                     self.width = p.width;
                     if (w_l == true) {
                         self.width -= 1;
@@ -489,14 +469,14 @@ pub const Panel = struct {
                 } else {
                     self.width = p.width;
                 }
-                if (self.size_absolute != null) {
+                if (self.size_absolute) |sa| {
                     // TODO:
-                    if ((self.anchor_y + self.size_absolute.?) <= self.full_height.*) {
-                        self.height = self.size_absolute.?;
+                    if ((self.anchor_y + sa) <= self.full_height.*) {
+                        self.height = sa;
                     } else {
                         self.height = 0;
                     }
-                } else if (self.size_relative != null) {
+                } else if (self.size_relative) |sr| {
                     var sum_a: i32 = 0;
                     for (p.ch_sizes_absolute.items) |item| {
                         sum_a += item;
@@ -506,9 +486,9 @@ pub const Panel = struct {
                         sum_r += item;
                     }
                     var p_h = p.height;
-                    if (the_border != null) {
-                        const h_t = the_border.?.top != null;
-                        const h_b = the_border.?.bottom != null;
+                    if (the_border) |tb| {
+                        const h_t = tb.top != null;
+                        const h_b = tb.bottom != null;
                         if (h_t == true) {
                             p_h -= 1;
                         }
@@ -517,14 +497,20 @@ pub const Panel = struct {
                         }
                     }
                     p_h -= sum_a;
-                    const h: i32 = @as(i32, @intFromFloat(@as(f32, @floatFromInt(p_h)) * self.size_relative.? / sum_r));
+                    const h: i32 = @as(
+                        i32,
+                        @intFromFloat(@as(
+                            f32,
+                            @floatFromInt(p_h),
+                        ) * sr / sum_r),
+                    );
                     self.height = h;
                 }
             } else {
-                if (the_border != null) {
+                if (the_border) |tb| {
                     self.height = p.height; // - 2;
-                    const h_t = the_border.?.top != null;
-                    const h_b = the_border.?.bottom != null;
+                    const h_t = tb.top != null;
+                    const h_b = tb.bottom != null;
                     if (h_t == true) {
                         self.height -= 1;
                     }
@@ -534,14 +520,14 @@ pub const Panel = struct {
                 } else {
                     self.height = p.height;
                 }
-                if (self.size_absolute != null) {
+                if (self.size_absolute) |sa| {
                     // TODO:
-                    if ((self.anchor_x + self.size_absolute.?) <= self.full_width.*) {
-                        self.width = self.size_absolute.?;
+                    if ((self.anchor_x + sa) <= self.full_width.*) {
+                        self.width = sa;
                     } else {
                         self.width = 0;
                     }
-                } else if (self.size_relative != null) {
+                } else if (self.size_relative) |sr| {
                     var sum_a: i32 = 0;
                     for (p.ch_sizes_absolute.items) |item| {
                         sum_a += item;
@@ -551,9 +537,9 @@ pub const Panel = struct {
                         sum_r += item;
                     }
                     var p_w = p.width;
-                    if (the_border != null) {
-                        const w_l = the_border.?.left != null;
-                        const w_r = the_border.?.right != null;
+                    if (the_border) |tb| {
+                        const w_l = tb.left != null;
+                        const w_r = tb.right != null;
                         self.width = p.width;
                         if (w_l == true) {
                             p_w -= 1;
@@ -563,35 +549,48 @@ pub const Panel = struct {
                         }
                     }
                     p_w -= sum_a;
-                    const w: i32 = @as(i32, @intFromFloat(@as(f32, @floatFromInt(p_w)) * self.size_relative.? / sum_r));
+                    const w: i32 = @as(
+                        i32,
+                        @intFromFloat(@as(
+                            f32,
+                            @floatFromInt(p_w),
+                        ) * sr / sum_r),
+                    );
                     self.width = w;
                 }
             }
-            if (self.sibling_next != null) {
+            if (self.sibling_next) |n| {
                 var bx: i32 = 0;
                 var by: i32 = 0;
-                if (p.border != null) {
+                if (p.border) |_| {
                     bx += 1;
                     by += 1;
                 }
-                const w = if (p.layout == Layout.Vertical) 0 else self.width; // + bx;
-                const h = if (p.layout == Layout.Vertical) self.height else 0; // + by else 0;
-                self.sibling_next.?.anchor_x = self.anchor_x + w;
-                self.sibling_next.?.anchor_y = self.anchor_y + h;
+                const w = if (p.layout == Layout.Vertical) 0 //
+                else self.width; // + bx;
+                const h = if (p.layout == Layout.Vertical) self.height //
+                else 0; // + by else 0;
+                n.anchor_x = self.anchor_x + w;
+                n.anchor_y = self.anchor_y + h;
                 // }
-                _ = self.sibling_next.?.update();
+                _ = n.update();
             }
+        } else {
+            self.width = self.parent_width.*;
+            self.height = self.parent_height.*;
+            self.anchor_x = 1;
+            self.anchor_y = 1;
         }
-        if (self.child_head != null) {
+        if (self.child_head) |current_child| {
             var bx: i32 = 0;
             var by: i32 = 0;
-            if (self.border != null) {
+            if (self.border) |_| {
                 bx += 1;
                 by += 1;
             }
-            self.child_head.?.anchor_x = self.anchor_x + bx;
-            self.child_head.?.anchor_y = self.anchor_y + by;
-            _ = self.child_head.?.update();
+            current_child.anchor_x = self.anchor_x + bx;
+            current_child.anchor_y = self.anchor_y + by;
+            _ = current_child.update();
         }
         return self;
     }
@@ -630,9 +629,8 @@ pub const Panel = struct {
                     @abs(self.anchor_x),
                     @abs(self.anchor_y) + @as(u32, @intCast(row)),
                 );
-                if (self.border != null) {
-                    _ = tl.setColor(self.border.?.color);
-                    const border = self.border.?;
+                if (self.border) |border| {
+                    _ = tl.setColor(border.color);
                     const b_t = border.top orelse ' ';
                     const b_b = border.bottom orelse ' ';
                     const b_l = border.left orelse ' ';
@@ -796,7 +794,7 @@ pub const Panel = struct {
                         _ = tl.textLine(ts4).draw();
                     }
                 } else {
-                    if (self.parent != null) {
+                    if (self.parent) |_| {
                         const t_line = stringAlign(
                             &tl_buffer_1,
                             "",
@@ -808,15 +806,15 @@ pub const Panel = struct {
                     }
                 }
             }
-            if (self.render_text_next != null) {
-                const r_text = self.render_text_next.?;
+            if (self.render_text_next) |r_text| {
+                // const r_text = self.render_text_next.?;
                 _ = r_text.draw();
                 if (self.writer.list.len > 3072) {
                     _ = self.writer.flush() catch unreachable;
                 }
             }
-            if (self.render_array_next != null) {
-                const r_text = self.render_array_next.?;
+            if (self.render_array_next) |r_text| {
+                // const r_text = self.render_array_next.?;
                 _ = r_text.draw();
                 if (self.writer.list.len > 3072) {
                     _ = self.writer.flush() catch unreachable;
@@ -825,15 +823,15 @@ pub const Panel = struct {
         }
         _ = self.writer.flush() catch unreachable;
         // Draw other siblings
-        if (self.sibling_next != null) {
-            _ = self.sibling_next.?.draw();
+        if (self.sibling_next) |n| {
+            _ = n.draw();
             if (self.writer.list.len > 3072) {
                 _ = self.writer.flush() catch unreachable;
             }
         }
         // Draw the "children"
-        if (self.child_head != null) {
-            _ = self.child_head.?.draw();
+        if (self.child_head) |current_child| {
+            _ = current_child.draw();
             if (self.writer.list.len > 3072) {
                 _ = self.writer.flush() catch unreachable;
             }

@@ -2,7 +2,8 @@ const std = @import("std");
 const ColorStyle = @import("Color.zig").ColorStyle;
 
 /// Fill characters for the border of a Panel
-/// for built-in border styles, e.g., top and bottom are assumed to be the same
+/// for built-in border styles, e.g., top and
+/// bottom are assumed to be the same
 pub const BorderElements = struct {
     /// top and bottom line
     horizontal: u21,
@@ -235,6 +236,7 @@ pub const Border = struct {
         return self;
     }
     /// Set top border characters/symbols
+    /// (left, center, right)
     pub fn setTopAll(
         self: *Self,
         l: ?u21,
@@ -247,6 +249,7 @@ pub const Border = struct {
         return self;
     }
     /// Set bottom border characters/symbols
+    /// (left, center, right)
     pub fn setBottomAll(
         self: *Self,
         l: ?u21,
@@ -259,27 +262,29 @@ pub const Border = struct {
         return self;
     }
     /// Set left border characters/symbols
+    /// (top, left, bottom)
     pub fn setLeftAll(
         self: *Self,
+        t: ?u21,
         l: ?u21,
-        c: ?u21,
-        r: ?u21,
+        b: ?u21,
     ) *Self {
-        self.top_left = l;
-        self.left = c;
-        self.bottom_left = r;
+        self.top_left = t;
+        self.left = l;
+        self.bottom_left = b;
         return self;
     }
     /// Set right border characters/symbols
+    /// (top, left, bottom)
     pub fn setRightAll(
         self: *Self,
+        t: ?u21,
         l: ?u21,
-        c: ?u21,
-        r: ?u21,
+        b: ?u21,
     ) *Self {
-        self.top_right = l;
-        self.right = c;
-        self.bottom_right = r;
+        self.top_right = t;
+        self.right = l;
+        self.bottom_right = b;
         return self;
     }
     /// Set border style to set all border characters/symbols

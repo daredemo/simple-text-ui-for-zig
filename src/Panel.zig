@@ -95,13 +95,64 @@ pub const RenderTextArray = struct {
     delta_y: i32 = 0,
     multi_x: i32 = 1, // size of the text, 1 => one char
     multi_y: i32 = 1,
+    /// Text to draw repeatedly
     text: *TextLine = undefined,
+    /// If set, this would be the first text of the array
     text_first: ?*TextLine = null,
+    /// Currently not used
     text_alt: ?*TextLine = null,
+    /// Coordinates of the texts
     coordinates: *std.ArrayList(Location) = undefined,
+    /// Next array of texts
     next_array: ?*RenderTextArray = null,
 
     const Self = @This();
+
+    fn drawItem(
+        self: *Self,
+        parent: *Panel,
+        item: Location,
+        index: usize,
+    ) void {
+        const nx: i32 = item.x * self.multi_x + self.delta_x;
+        const ny: i32 = item.y * self.multi_y + self.delta_y;
+        if (parent.writer.list.len > 3072) {
+            _ = parent.writer.flush() catch unreachable;
+        }
+        if (index == 0) {
+            if (self.text_first) |text_first| {
+                _ = text_first.parentXY(
+                    @as(u32, @abs(parent.anchor_x)),
+                    @as(u32, @abs(parent.anchor_y)),
+                );
+                _ = text_first.relativeXY(
+                    nx,
+                    ny,
+                );
+                _ = text_first.draw();
+            } else {
+                _ = self.text.parentXY(
+                    @as(u32, @abs(parent.anchor_x)),
+                    @as(u32, @abs(parent.anchor_y)),
+                );
+                _ = self.text.relativeXY(
+                    nx,
+                    ny,
+                );
+                _ = self.text.draw();
+            }
+        } else {
+            _ = self.text.parentXY(
+                @as(u32, @abs(parent.anchor_x)),
+                @as(u32, @abs(parent.anchor_y)),
+            );
+            _ = self.text.relativeXY(
+                nx,
+                ny,
+            );
+            _ = self.text.draw();
+        }
+    }
 
     /// Draw RenderTextArray items
     pub fn draw(self: *Self) void {
@@ -115,44 +166,7 @@ pub const RenderTextArray = struct {
             );
             // }
             for (self.coordinates.items, 0..) |item, index| {
-                const nx: i32 = item.x * self.multi_x + self.delta_x;
-                const ny: i32 = item.y * self.multi_y + self.delta_y;
-                if (p.writer.list.len > 3072) {
-                    _ = p.writer.flush() catch unreachable;
-                }
-                if (index == 0) {
-                    if (self.text_first != null) {
-                        _ = self.text_first.?.parentXY(
-                            @as(u32, @abs(p.anchor_x)),
-                            @as(u32, @abs(p.anchor_y)),
-                        );
-                        _ = self.text_first.?.relativeXY(
-                            nx,
-                            ny,
-                        );
-                        _ = self.text_first.?.draw();
-                    } else {
-                        _ = self.text.parentXY(
-                            @as(u32, @abs(p.anchor_x)),
-                            @as(u32, @abs(p.anchor_y)),
-                        );
-                        _ = self.text.relativeXY(
-                            nx,
-                            ny,
-                        );
-                        _ = self.text.draw();
-                    }
-                } else {
-                    _ = self.text.parentXY(
-                        @as(u32, @abs(p.anchor_x)),
-                        @as(u32, @abs(p.anchor_y)),
-                    );
-                    _ = self.text.relativeXY(
-                        nx,
-                        ny,
-                    );
-                    _ = self.text.draw();
-                }
+                self.drawItem(p, item, index);
             }
             _ = p.writer.flush() catch unreachable;
         }
@@ -313,16 +327,14 @@ pub const Panel = struct {
         const s_abs = absolute_size orelse 0;
         const s_rel = relative_size orelse 0.0;
         the_child.parent = self;
-        if (self.child_head == null) {
-            self.child_head = the_child;
-        } else {
-            if (self.child_head) |current_child| {
-                if (self.getLastChild(
-                    current_child,
-                )) |last_child| {
-                    last_child.sibling_next = the_child;
-                }
+        if (self.child_head) |current_child| {
+            if (self.getLastChild(
+                current_child,
+            )) |last_child| {
+                last_child.sibling_next = the_child;
             }
+        } else {
+            self.child_head = the_child;
         }
         _ = self.ch_sizes_absolute.append(
             s_abs,
@@ -604,6 +616,338 @@ pub const Panel = struct {
         return self;
     }
 
+    fn drawFrame(self: *Self) void {
+        var b_t: u21 = @as(u21, ' ');
+        var b_b: u21 = @as(u21, ' ');
+        var b_l: u21 = @as(u21, ' ');
+        var b_r: u21 = @as(u21, ' ');
+        var b_tl: u21 = @as(u21, ' ');
+        var b_tr: u21 = @as(u21, ' ');
+        var b_bl: u21 = @as(u21, ' ');
+        var b_br: u21 = @as(u21, ' ');
+        var tl = TextLine.init(
+            self.writer,
+            "",
+        );
+        if (self.border) |f| {
+            _ = tl.setColor(f.color);
+            b_t = f.top orelse ' ';
+            b_b = f.bottom orelse ' ';
+            b_l = f.left orelse ' ';
+            b_r = f.right orelse ' ';
+            b_tl = f.top_left orelse ' ';
+            b_tr = f.top_right orelse ' ';
+            b_bl = f.bottom_left orelse ' ';
+            b_br = f.bottom_right orelse ' ';
+        }
+        var tl_buffer_1: [512]u8 = undefined;
+        var tl_buffer_2: [512]u8 = undefined;
+        var tl_buffer_3: [512]u8 = undefined;
+        const hh = @as(usize, @abs(self.height)); // + 1;
+        for (0..hh) |row| {
+            if (self.writer.list.len > 3072) {
+                _ = self.writer.flush() catch unreachable;
+            }
+            _ = tl.absXY(
+                @abs(self.anchor_x),
+                @abs(self.anchor_y) + @as(u32, @intCast(row)),
+            );
+            if (row == 0) {
+                const ts2 = stringAlign(
+                    &tl_buffer_1,
+                    "",
+                    b_t,
+                    @as(usize, @abs(self.width)) - 2,
+                    self.title_align,
+                );
+                const ts3 = stringAlign(
+                    &tl_buffer_2,
+                    ts2,
+                    b_tl,
+                    @as(usize, @abs(self.width)) - 1,
+                    TAR,
+                );
+                const ts4 = stringAlign(
+                    &tl_buffer_3,
+                    ts3,
+                    b_tr,
+                    @as(usize, @abs(self.width)),
+                    TAL,
+                );
+                _ = tl.textLine(ts4).draw();
+            } else if (row == self.height - 1) {
+                const ts2 = stringAlign(
+                    &tl_buffer_1,
+                    "",
+                    b_b,
+                    @as(usize, @abs(self.width)) - 2,
+                    self.title_align,
+                );
+                const ts3 = stringAlign(
+                    &tl_buffer_2,
+                    ts2,
+                    b_bl,
+                    @as(usize, @abs(self.width)) - 1,
+                    TAR,
+                );
+                const ts4 = stringAlign(
+                    &tl_buffer_3,
+                    ts3,
+                    b_br,
+                    @as(usize, @abs(self.width)),
+                    TAL,
+                );
+                _ = tl.textLine(ts4).draw();
+            } else {
+                const ts2 = stringAlign(
+                    &tl_buffer_1,
+                    "",
+                    ' ',
+                    @as(usize, @abs(self.width)) - 2,
+                    self.title_align,
+                );
+                const ts3 = stringAlign(
+                    &tl_buffer_2,
+                    ts2,
+                    b_l,
+                    @as(usize, @abs(self.width)) - 1,
+                    TAR,
+                );
+                const ts4 = stringAlign(
+                    &tl_buffer_3,
+                    ts3,
+                    b_r,
+                    @as(usize, @abs(self.width)),
+                    TAL,
+                );
+                _ = tl.textLine(ts4).draw();
+            }
+        }
+        if (self.title) |title| {
+            const title_len = stringLen(title);
+            if (title_len < self.width - 4) {
+                _ = @memset(&tl_buffer_1, 0);
+                const ts2 = stringAlign(
+                    &tl_buffer_1,
+                    title,
+                    ' ',
+                    title_len + 2,
+                    TAC,
+                );
+                var coord_y: i32 = @as(i32, 0);
+                var coord_x: i32 = @as(i32, 2);
+                if (self.title_position.tag() == 2) {
+                    coord_y = @intCast(hh - 1);
+                }
+                if (self.title_align.tag() == 2) {
+                    coord_x = @intCast(self.width - 4);
+                    coord_x -= @intCast(title_len);
+                } else if (self.title_align.tag() == 3) {
+                    const t_len: i32 = @intCast(title_len);
+                    coord_x = @divFloor(self.width - t_len, @as(i32, 2)) - 1;
+                }
+                _ = tl.absXY(
+                    @abs(self.anchor_x + coord_x),
+                    @abs(self.anchor_y) + @as(u32, @intCast(coord_y)),
+                );
+                _ = tl.textLine(ts2).draw();
+            }
+        }
+    }
+
+    fn drawRow(self: *Self, row: usize) void {
+        if (self.writer.list.len > 3072) {
+            _ = self.writer.flush() catch unreachable;
+        }
+        var tl_buffer_1: [512]u8 = undefined;
+        var tl_buffer_2: [512]u8 = undefined;
+        var tl_buffer_3: [512]u8 = undefined;
+        var tl = TextLine.init(
+            self.writer,
+            "",
+        );
+        _ = tl.absXY(
+            @abs(self.anchor_x),
+            @abs(self.anchor_y) + @as(u32, @intCast(row)),
+        );
+        if (self.border) |border| {
+            _ = tl.setColor(border.color);
+            const b_t = border.top orelse ' ';
+            const b_b = border.bottom orelse ' ';
+            const b_l = border.left orelse ' ';
+            const b_r = border.right orelse ' ';
+            const b_tl = border.top_left orelse ' ';
+            const b_tr = border.top_right orelse ' ';
+            const b_bl = border.bottom_left orelse ' ';
+            const b_br = border.bottom_right orelse ' ';
+            if (row == 0) {
+                if ((self.title != null) and //
+                    (self.title_position.tag() == 1))
+                {
+                    const title_len = stringLen(self.title.?);
+                    const ts = stringAlign(
+                        &tl_buffer_1,
+                        self.title.?,
+                        ' ',
+                        title_len + 2,
+                        TAC,
+                    );
+                    const ts1 = stringAlign(
+                        &tl_buffer_2,
+                        ts,
+                        b_t,
+                        title_len + 4,
+                        TAC,
+                    );
+                    const ts2 = stringAlign(
+                        &tl_buffer_3,
+                        ts1,
+                        b_t,
+                        @as(usize, @abs(self.width)) - 2,
+                        self.title_align,
+                    );
+                    const ts3 = stringAlign(
+                        &tl_buffer_1,
+                        ts2,
+                        b_tl,
+                        @as(usize, @abs(self.width)) - 1,
+                        TAR,
+                    );
+                    const ts4 = stringAlign(
+                        &tl_buffer_2,
+                        ts3,
+                        b_tr,
+                        @as(usize, @abs(self.width)),
+                        TAL,
+                    );
+                    _ = tl.textLine(ts4).draw();
+                } else {
+                    const ts2 = stringAlign(
+                        &tl_buffer_3,
+                        "",
+                        b_t,
+                        @as(usize, @abs(self.width)) - 2,
+                        self.title_align,
+                    );
+                    const ts3 = stringAlign(
+                        &tl_buffer_1,
+                        ts2,
+                        b_tl,
+                        @as(usize, @abs(self.width)) - 1,
+                        TAR,
+                    );
+                    const ts4 = stringAlign(
+                        &tl_buffer_2,
+                        ts3,
+                        b_tr,
+                        @as(usize, @abs(self.width)),
+                        TAL,
+                    );
+                    _ = tl.textLine(ts4).draw();
+                }
+            } else if (row == self.height - 1) {
+                if ((self.title != null) and //
+                    (self.title_position.tag() == 2))
+                {
+                    const title_len = stringLen(self.title.?);
+                    const ts = stringAlign(
+                        &tl_buffer_1,
+                        self.title.?,
+                        ' ',
+                        title_len + 2,
+                        TAC,
+                    );
+                    const ts1 = stringAlign(
+                        &tl_buffer_2,
+                        ts,
+                        b_b,
+                        title_len + 4,
+                        TAC,
+                    );
+                    const ts2 = stringAlign(
+                        &tl_buffer_3,
+                        ts1,
+                        b_b,
+                        @as(usize, @abs(self.width)) - 2,
+                        self.title_align,
+                    );
+                    const ts3 = stringAlign(
+                        &tl_buffer_1,
+                        ts2,
+                        b_bl,
+                        @as(usize, @abs(self.width)) - 1,
+                        TAR,
+                    );
+                    const ts4 = stringAlign(
+                        &tl_buffer_2,
+                        ts3,
+                        b_br,
+                        @as(usize, @abs(self.width)),
+                        TAL,
+                    );
+                    _ = tl.textLine(ts4).draw();
+                } else {
+                    const ts2 = stringAlign(
+                        &tl_buffer_3,
+                        "",
+                        b_b,
+                        @as(usize, @abs(self.width)) - 2,
+                        self.title_align,
+                    );
+                    const ts3 = stringAlign(
+                        &tl_buffer_1,
+                        ts2,
+                        b_bl,
+                        @as(usize, @abs(self.width)) - 1,
+                        TAR,
+                    );
+                    const ts4 = stringAlign(
+                        &tl_buffer_2,
+                        ts3,
+                        b_br,
+                        @as(usize, @abs(self.width)),
+                        TAL,
+                    );
+                    _ = tl.textLine(ts4).draw();
+                }
+            } else {
+                const ts2 = stringAlign(
+                    &tl_buffer_3,
+                    "",
+                    ' ',
+                    @as(usize, @abs(self.width)) - 2,
+                    self.title_align,
+                );
+                const ts3 = stringAlign(
+                    &tl_buffer_1,
+                    ts2,
+                    b_l,
+                    @as(usize, @abs(self.width)) - 1,
+                    TAR,
+                );
+                const ts4 = stringAlign(
+                    &tl_buffer_2,
+                    ts3,
+                    b_r,
+                    @as(usize, @abs(self.width)),
+                    TAL,
+                );
+                _ = tl.textLine(ts4).draw();
+            }
+        } else {
+            if (self.parent) |_| {
+                const t_line = stringAlign(
+                    &tl_buffer_1,
+                    "",
+                    ' ',
+                    @as(usize, @abs(self.width)) - 2,
+                    TextAlign.Left,
+                );
+                _ = tl.textLine(t_line).draw();
+            }
+        }
+    }
+
     /// Draw the panes
     pub fn draw(self: *Self) *Self {
         _ = self.update();
@@ -613,199 +957,11 @@ pub const Panel = struct {
         if ((self.width >= self.minimum_width) and //
             (self.height >= self.minimum_height))
         {
-            const hh = @as(usize, @abs(self.height)); // + 1;
-            for (0..hh) |row| {
-                if (self.writer.list.len > 3072) {
-                    _ = self.writer.flush() catch unreachable;
-                }
-                var tl_buffer_1: [512]u8 = undefined;
-                var tl_buffer_2: [512]u8 = undefined;
-                var tl_buffer_3: [512]u8 = undefined;
-                var tl = TextLine.init(
-                    self.writer,
-                    "",
-                );
-                _ = tl.absXY(
-                    @abs(self.anchor_x),
-                    @abs(self.anchor_y) + @as(u32, @intCast(row)),
-                );
-                if (self.border) |border| {
-                    _ = tl.setColor(border.color);
-                    const b_t = border.top orelse ' ';
-                    const b_b = border.bottom orelse ' ';
-                    const b_l = border.left orelse ' ';
-                    const b_r = border.right orelse ' ';
-                    const b_tl = border.top_left orelse ' ';
-                    const b_tr = border.top_right orelse ' ';
-                    const b_bl = border.bottom_left orelse ' ';
-                    const b_br = border.bottom_right orelse ' ';
-                    if (row == 0) {
-                        if ((self.title != null) and //
-                            (self.title_position.tag() == 1))
-                        {
-                            const title_len = stringLen(self.title.?);
-                            const ts = stringAlign(
-                                &tl_buffer_1,
-                                self.title.?,
-                                ' ',
-                                title_len + 2,
-                                TAC,
-                            );
-                            const ts1 = stringAlign(
-                                &tl_buffer_2,
-                                ts,
-                                b_t,
-                                title_len + 4,
-                                TAC,
-                            );
-                            const ts2 = stringAlign(
-                                &tl_buffer_3,
-                                ts1,
-                                b_t,
-                                @as(usize, @abs(self.width)) - 2,
-                                self.title_align,
-                            );
-                            const ts3 = stringAlign(
-                                &tl_buffer_1,
-                                ts2,
-                                b_tl,
-                                @as(usize, @abs(self.width)) - 1,
-                                TAR,
-                            );
-                            const ts4 = stringAlign(
-                                &tl_buffer_2,
-                                ts3,
-                                b_tr,
-                                @as(usize, @abs(self.width)),
-                                TAL,
-                            );
-                            _ = tl.textLine(ts4).draw();
-                        } else {
-                            const ts2 = stringAlign(
-                                &tl_buffer_3,
-                                "",
-                                b_t,
-                                @as(usize, @abs(self.width)) - 2,
-                                self.title_align,
-                            );
-                            const ts3 = stringAlign(
-                                &tl_buffer_1,
-                                ts2,
-                                b_tl,
-                                @as(usize, @abs(self.width)) - 1,
-                                TAR,
-                            );
-                            const ts4 = stringAlign(
-                                &tl_buffer_2,
-                                ts3,
-                                b_tr,
-                                @as(usize, @abs(self.width)),
-                                TAL,
-                            );
-                            _ = tl.textLine(ts4).draw();
-                        }
-                    } else if (row == self.height - 1) {
-                        if ((self.title != null) and //
-                            (self.title_position.tag() == 2))
-                        {
-                            const title_len = stringLen(self.title.?);
-                            const ts = stringAlign(
-                                &tl_buffer_1,
-                                self.title.?,
-                                ' ',
-                                title_len + 2,
-                                TAC,
-                            );
-                            const ts1 = stringAlign(
-                                &tl_buffer_2,
-                                ts,
-                                b_b,
-                                title_len + 4,
-                                TAC,
-                            );
-                            const ts2 = stringAlign(
-                                &tl_buffer_3,
-                                ts1,
-                                b_b,
-                                @as(usize, @abs(self.width)) - 2,
-                                self.title_align,
-                            );
-                            const ts3 = stringAlign(
-                                &tl_buffer_1,
-                                ts2,
-                                b_bl,
-                                @as(usize, @abs(self.width)) - 1,
-                                TAR,
-                            );
-                            const ts4 = stringAlign(
-                                &tl_buffer_2,
-                                ts3,
-                                b_br,
-                                @as(usize, @abs(self.width)),
-                                TAL,
-                            );
-                            _ = tl.textLine(ts4).draw();
-                        } else {
-                            const ts2 = stringAlign(
-                                &tl_buffer_3,
-                                "",
-                                b_b,
-                                @as(usize, @abs(self.width)) - 2,
-                                self.title_align,
-                            );
-                            const ts3 = stringAlign(
-                                &tl_buffer_1,
-                                ts2,
-                                b_bl,
-                                @as(usize, @abs(self.width)) - 1,
-                                TAR,
-                            );
-                            const ts4 = stringAlign(
-                                &tl_buffer_2,
-                                ts3,
-                                b_br,
-                                @as(usize, @abs(self.width)),
-                                TAL,
-                            );
-                            _ = tl.textLine(ts4).draw();
-                        }
-                    } else {
-                        const ts2 = stringAlign(
-                            &tl_buffer_3,
-                            "",
-                            ' ',
-                            @as(usize, @abs(self.width)) - 2,
-                            self.title_align,
-                        );
-                        const ts3 = stringAlign(
-                            &tl_buffer_1,
-                            ts2,
-                            b_l,
-                            @as(usize, @abs(self.width)) - 1,
-                            TAR,
-                        );
-                        const ts4 = stringAlign(
-                            &tl_buffer_2,
-                            ts3,
-                            b_r,
-                            @as(usize, @abs(self.width)),
-                            TAL,
-                        );
-                        _ = tl.textLine(ts4).draw();
-                    }
-                } else {
-                    if (self.parent) |_| {
-                        const t_line = stringAlign(
-                            &tl_buffer_1,
-                            "",
-                            ' ',
-                            @as(usize, @abs(self.width)) - 2,
-                            TextAlign.Left,
-                        );
-                        _ = tl.textLine(t_line).draw();
-                    }
-                }
-            }
+            self.drawFrame();
+            // const hh = @as(usize, @abs(self.height)); // + 1;
+            // for (0..hh) |row| {
+            //     self.drawRow(row);
+            // }
             if (self.render_text_next) |r_text| {
                 // const r_text = self.render_text_next.?;
                 _ = r_text.draw();

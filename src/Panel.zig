@@ -746,6 +746,9 @@ pub const Panel = struct {
             }
         }
         if (self.title) |title| {
+            if (self.border) |f| {
+                _ = tl.setColor(f.color);
+            }
             const title_len = stringLen(title);
             if (title_len < self.width - 4) {
                 _ = @memset(&tl_buffer_1, 0);

@@ -482,10 +482,11 @@ pub const Panel = struct {
                 if (the_border) |tb| {
                     const w_l = tb.left != null;
                     const w_r = tb.right != null;
+                    self.width = p.width;
                     if (self.size_optional_fixed) |size| {
-                        self.width = size;
-                    } else {
-                        self.width = p.width;
+                        if (size < self.width) {
+                            self.width = size;
+                        }
                     }
                     if (w_l == true) {
                         self.width -= 1;
@@ -534,10 +535,11 @@ pub const Panel = struct {
                     self.height = h;
                 }
             } else {
+                self.height = p.height; // - 2;
                 if (self.size_optional_fixed) |size| {
-                    self.height = size;
-                } else {
-                    self.height = p.height; // - 2;
+                    if (size < self.height) {
+                        self.height = size;
+                    }
                 }
                 if (the_border) |tb| {
                     const h_t = tb.top != null;

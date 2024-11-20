@@ -199,6 +199,8 @@ pub const Panel = struct {
     render_array_next: ?*RenderTextArray = undefined,
     size_absolute: ?i32 = undefined,
     size_relative: ?f32 = undefined,
+    /// Size to fix the second dimension to
+    size_optional_fixed: ?i32 = null,
     border: ?Border = undefined,
     allocator: *std.mem.Allocator = undefined,
     writer: *BufWriter = undefined,
@@ -444,6 +446,15 @@ pub const Panel = struct {
     }
 
     /// Set minimum width when panel is rendered
+    pub fn setSizeOptionalFixed(
+        self: *Self,
+        size: i32,
+    ) *Self {
+        self.size_optional_fixed = size;
+        return self;
+    }
+
+    /// Set minimum width when panel is rendered
     pub fn setMinWidth(
         self: *Self,
         width: i32,
@@ -471,7 +482,11 @@ pub const Panel = struct {
                 if (the_border) |tb| {
                     const w_l = tb.left != null;
                     const w_r = tb.right != null;
-                    self.width = p.width;
+                    if (self.size_optional_fixed) |size| {
+                        self.width = size;
+                    } else {
+                        self.width = p.width;
+                    }
                     if (w_l == true) {
                         self.width -= 1;
                     }
@@ -519,8 +534,12 @@ pub const Panel = struct {
                     self.height = h;
                 }
             } else {
-                if (the_border) |tb| {
+                if (self.size_optional_fixed) |size| {
+                    self.height = size;
+                } else {
                     self.height = p.height; // - 2;
+                }
+                if (the_border) |tb| {
                     const h_t = tb.top != null;
                     const h_b = tb.bottom != null;
                     if (h_t == true) {
@@ -529,9 +548,10 @@ pub const Panel = struct {
                     if (h_b == true) {
                         self.height -= 1;
                     }
-                } else {
-                    self.height = p.height;
                 }
+                // else {
+                //     self.height = p.height;
+                // }
                 if (self.size_absolute) |sa| {
                     // TODO:
                     if ((self.anchor_x + sa) <= self.full_width.*) {

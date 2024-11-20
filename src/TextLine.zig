@@ -200,7 +200,7 @@ pub const TextLine = struct {
                 px + @abs(rx),
             );
         }
-        if (style.modes == null) {
+        if (style.modes) |_| {
             _ = Term.setColorBF(
                 self.writer,
                 style.bg.?,

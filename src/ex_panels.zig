@@ -82,6 +82,16 @@ pub fn main() !void {
         &allocator,
     ).setBorderStyle(
         Border.BorderStyle.LightRound,
+    ).setColor(
+        ColorStyle.init(
+            null,
+            null,
+            // ColorF.initValue(22),
+            ColorModes{
+                // .Italic = true,
+                .Bold = true,
+            },
+        ),
     );
     defer _ = allocator.destroy(border_1);
     _ = panel_main.setBorder(
@@ -300,6 +310,15 @@ const TheApp = struct {
             2,
             2,
         );
+        // _ = tl_panelinfo.setColor(
+        //     ColorStyle.init(
+        //         null,
+        //         null,
+        //         ColorModes{
+        //             .Italic = true,
+        //         },
+        //     ),
+        // );
         const child_head = self.root_panel.child_head.?;
         const child_2 = child_head.sibling_next.?;
         _ = tl_heart.parentXY(

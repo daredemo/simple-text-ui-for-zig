@@ -30,6 +30,8 @@ const FaceE = @import(
 const BufWriter = @import(
     "SimpleBufferedWriter.zig",
 ).SimpleBufferedWriter;
+const ColorStyle = @import("Color.zig").ColorStyle;
+const ColorModes = @import("Color.zig").ColorModes;
 
 const TAL = TextAlign.Left;
 const TAR = TextAlign.Right;
@@ -746,9 +748,6 @@ pub const Panel = struct {
             }
         }
         if (self.title) |title| {
-            if (self.border) |f| {
-                _ = tl.setColor(f.color);
-            }
             const title_len = stringLen(title);
             if (title_len < self.width - 4) {
                 _ = @memset(&tl_buffer_1, 0);
@@ -775,9 +774,14 @@ pub const Panel = struct {
                     @abs(self.anchor_x + coord_x),
                     @abs(self.anchor_y) + @as(u32, @intCast(coord_y)),
                 );
-                _ = tl.textLine(ts2).draw();
+                if (self.border) |f| {
+                    _ = tl.textLine(ts2).setColor(f.color).draw();
+                } else {
+                    _ = tl.textLine(ts2).draw();
+                }
             }
         }
+        _ = self.writer.flush() catch unreachable;
     }
 
     fn drawRow(self: *Self, row: usize) void {

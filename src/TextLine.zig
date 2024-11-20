@@ -201,15 +201,15 @@ pub const TextLine = struct {
             );
         }
         if (style.modes) |_| {
+            _ = Term.setColorStyle(
+                self.writer,
+                style,
+            );
+        } else {
             _ = Term.setColorBF(
                 self.writer,
                 style.bg.?,
                 style.fg.?,
-            );
-        } else {
-            _ = Term.setColorStyle(
-                self.writer,
-                style,
             );
         }
         if (self.text) |txt| {

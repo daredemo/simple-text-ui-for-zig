@@ -71,7 +71,7 @@ pub const PositionTB = enum {
 /// Text element relative to the panel
 pub const RenderText = struct {
     parent: ?*Panel = undefined,
-    text: *TextLine = undefined,
+    text: ?*TextLine = null,
     next_text: ?*RenderText = null,
 
     const Self = @This();
@@ -82,12 +82,16 @@ pub const RenderText = struct {
             if (p.writer.list.len > 3072) {
                 _ = p.writer.flush() catch unreachable;
             }
-            _ = self.text.parentXY(
-                @as(u32, @abs(p.anchor_x)),
-                @as(u32, @abs(p.anchor_y)),
-            );
+            if (self.text) |text| {
+                _ = text.parentXY(
+                    @as(u32, @abs(p.anchor_x)),
+                    @as(u32, @abs(p.anchor_y)),
+                );
+            }
         }
-        _ = self.text.draw();
+        if (self.text) |text| {
+            _ = text.draw();
+        }
         if (self.next_text) |n| {
             _ = n.draw();
         }
@@ -102,7 +106,7 @@ pub const RenderTextArray = struct {
     multi_x: i32 = 1, // size of the text, 1 => one char
     multi_y: i32 = 1,
     /// Text to draw repeatedly
-    text: *TextLine = undefined,
+    text: ?*TextLine = null,
     /// If set, this would be the first text of the array
     text_first: ?*TextLine = null,
     /// Currently not used
@@ -137,26 +141,30 @@ pub const RenderTextArray = struct {
                 );
                 _ = text_first.draw();
             } else {
-                _ = self.text.parentXY(
+                if (self.text) |text| {
+                    _ = text.parentXY(
+                        @as(u32, @abs(parent.anchor_x)),
+                        @as(u32, @abs(parent.anchor_y)),
+                    );
+                    _ = text.relativeXY(
+                        nx,
+                        ny,
+                    );
+                    _ = text.draw();
+                }
+            }
+        } else {
+            if (self.text) |text| {
+                _ = text.parentXY(
                     @as(u32, @abs(parent.anchor_x)),
                     @as(u32, @abs(parent.anchor_y)),
                 );
-                _ = self.text.relativeXY(
+                _ = text.relativeXY(
                     nx,
                     ny,
                 );
-                _ = self.text.draw();
+                _ = text.draw();
             }
-        } else {
-            _ = self.text.parentXY(
-                @as(u32, @abs(parent.anchor_x)),
-                @as(u32, @abs(parent.anchor_y)),
-            );
-            _ = self.text.relativeXY(
-                nx,
-                ny,
-            );
-            _ = self.text.draw();
         }
     }
 
@@ -166,15 +174,17 @@ pub const RenderTextArray = struct {
             if (p.writer.list.len > 3072) {
                 _ = p.writer.flush() catch unreachable;
             }
-            _ = self.text.parentXY(
-                @as(u32, @abs(p.anchor_x)),
-                @as(u32, @abs(p.anchor_y)),
-            );
-            // }
-            for (self.coordinates.items, 0..) |item, index| {
-                self.drawItem(p, item, index);
+            if (self.text) |text| {
+                _ = text.parentXY(
+                    @as(u32, @abs(p.anchor_x)),
+                    @as(u32, @abs(p.anchor_y)),
+                );
+                // }
+                for (self.coordinates.items, 0..) |item, index| {
+                    self.drawItem(p, item, index);
+                }
+                _ = p.writer.flush() catch unreachable;
             }
-            _ = p.writer.flush() catch unreachable;
         }
         if (self.next_array) |n| {
             _ = n.draw();

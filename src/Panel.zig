@@ -30,8 +30,12 @@ const FaceE = @import(
 const BufWriter = @import(
     "SimpleBufferedWriter.zig",
 ).SimpleBufferedWriter;
-const ColorStyle = @import("Color.zig").ColorStyle;
-const ColorModes = @import("Color.zig").ColorModes;
+const ColorStyle = @import(
+    "Color.zig",
+).ColorStyle;
+const ColorModes = @import(
+    "Color.zig",
+).ColorModes;
 
 const TAL = TextAlign.Left;
 const TAR = TextAlign.Right;
@@ -195,10 +199,10 @@ pub const Panel = struct {
     minimum_height: i32 = undefined,
     layout: Layout = undefined,
     parent: ?*Panel = undefined,
-    child_head: ?*Panel = undefined,
-    sibling_next: ?*Panel = undefined,
-    render_text_next: ?*RenderText = undefined,
-    render_array_next: ?*RenderTextArray = undefined,
+    child_head: ?*Panel = null,
+    sibling_next: ?*Panel = null,
+    render_text_next: ?*RenderText = null,
+    render_array_next: ?*RenderTextArray = null,
     size_absolute: ?i32 = undefined,
     size_relative: ?f32 = undefined,
     /// Size to fix the second dimension to

@@ -20,12 +20,8 @@ const TitlePosition = @import("Panel.zig").PositionTB;
 const StrAU = string_stuff.Alignment;
 const stringAlign = string_stuff.stringAlign;
 
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
-
 pub fn main() !void {
-    var buf_writer = BufWriter{};
+    var buf_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
     defer _ = buf_writer.flush() catch unreachable;
     libdef.handleSigwinch(0);
     libdef.setSignal();
@@ -145,13 +141,22 @@ pub fn main() !void {
         null,
         1.0,
     );
-    var the_app = TheApp.init(
-        "Threaded App",
-        panel_root,
-        20,
-        15,
-        &buf_writer,
-    );
+    var the_app = TheApp{
+        .name = "Threaded App",
+        .root_panel = panel_root,
+        .is_running = true,
+        .heart_beat = false,
+        .height = 20,
+        .width = 15,
+        .writer = &buf_writer,
+    };
+    // var the_app = TheApp.init(
+    //     "Threaded App",
+    //     panel_root,
+    //     20,
+    //     15,
+    //     &buf_writer,
+    // );
     var thread_heartbeat = try std.Thread.spawn(
         .{},
         doAppHeartBeatThread,
@@ -193,14 +198,14 @@ const TheApp = struct {
     width: u8,
     height: u8,
     root_panel: *Panel = undefined,
-    writer: *BufWriter = undefined,
+    writer: *std.io.BufferedWriter(4096, std.fs.File.Writer), //.Writer,
 
     pub fn init(
         the_name: []const u8,
         root_panel: *Panel,
         width: u8,
         height: u8,
-        writer: *BufWriter,
+        writer: anytype,
     ) TheApp {
         return TheApp{
             .name = the_name,

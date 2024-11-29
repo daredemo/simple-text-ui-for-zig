@@ -14,14 +14,8 @@ const ColorStyle = ColorDef.ColorStyle;
 const ColorModes = ColorDef.ColorModes;
 const TextLine = TLine.TextLine;
 
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
-
-// const write_out = std.io.getStdOut().writer();
-
 pub fn main() !void {
-    var buf_writer = BufWriter{};
+    var buf_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
     defer _ = buf_writer.flush() catch unreachable;
     libdef.handleSigwinch(0);
     libdef.setSignal();
@@ -51,12 +45,21 @@ pub fn main() !void {
     }
     _ = buf_writer.flush() catch unreachable;
     _ = Term.clearScreen(&buf_writer);
-    var the_app = TheApp.init(
-        "Threaded App",
-        20,
-        15,
-        &buf_writer,
-    );
+    // var the_app = TheApp.init(
+    //     "Threaded App",
+    //     20,
+    //     15,
+    //     &buf_writer,
+    // );
+    var the_app = TheApp{
+        .name = "Threaded App",
+        .is_running = true,
+        .heart_beat = false,
+        .width = 15,
+        .height = 20,
+        .writer = &buf_writer,
+    };
+
     var tl_buffer: [512]u8 = undefined;
     const app_name = try std.fmt.bufPrint(
         &tl_buffer,
@@ -121,13 +124,13 @@ const TheApp = struct {
     heart_beat: bool,
     width: u8,
     height: u8,
-    writer: *BufWriter,
+    writer: *std.io.BufferedWriter(4096, std.fs.File.Writer), //.Writer,
 
     pub fn init(
         the_name: []const u8,
         width: u8,
         height: u8,
-        writer: *BufWriter,
+        writer: anytype,
     ) TheApp {
         return TheApp{
             .name = the_name,

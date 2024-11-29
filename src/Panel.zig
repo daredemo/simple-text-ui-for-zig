@@ -27,9 +27,6 @@ const Face = @import(
 const FaceE = @import(
     "Location.zig",
 ).FaceE;
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
 const ColorStyle = @import(
     "Color.zig",
 ).ColorStyle;
@@ -79,9 +76,9 @@ pub const RenderText = struct {
     /// Draw RenderText items
     pub fn draw(self: *Self) void {
         if (self.parent) |p| {
-            if (p.writer.list.len > 3072) {
-                _ = p.writer.flush() catch unreachable;
-            }
+            // if (p.writer.list.len > 3072) {
+            //     _ = p.writer.flush() catch unreachable;
+            // }
             if (self.text) |text| {
                 _ = text.parentXY(
                     @as(u32, @abs(p.anchor_x)),
@@ -126,9 +123,9 @@ pub const RenderTextArray = struct {
     ) void {
         const nx: i32 = item.x * self.multi_x + self.delta_x;
         const ny: i32 = item.y * self.multi_y + self.delta_y;
-        if (parent.writer.list.len > 3072) {
-            _ = parent.writer.flush() catch unreachable;
-        }
+        // if (parent.writer.list.len > 3072) {
+        //     _ = parent.writer.flush() catch unreachable;
+        // }
         if (index == 0) {
             if (self.text_first) |text_first| {
                 _ = text_first.parentXY(
@@ -171,9 +168,9 @@ pub const RenderTextArray = struct {
     /// Draw RenderTextArray items
     pub fn draw(self: *Self) void {
         if (self.parent) |p| {
-            if (p.writer.list.len > 3072) {
-                _ = p.writer.flush() catch unreachable;
-            }
+            // if (p.writer.list.len > 3072) {
+            //     _ = p.writer.flush() catch unreachable;
+            // }
             if (self.text) |text| {
                 _ = text.parentXY(
                     @as(u32, @abs(p.anchor_x)),
@@ -219,7 +216,7 @@ pub const Panel = struct {
     size_optional_fixed: ?i32 = null,
     border: ?Border = undefined,
     allocator: *std.mem.Allocator = undefined,
-    writer: *BufWriter = undefined,
+    writer: *std.io.BufferedWriter(4096, std.fs.File.Writer), //.Writer,
     ch_sizes_absolute: std.ArrayList(
         i32,
     ) = undefined,
@@ -280,7 +277,7 @@ pub const Panel = struct {
         parent_h: *i32,
         layout: Layout,
         allocator: *std.mem.Allocator,
-        writer: *BufWriter,
+        writer: anytype,
     ) *Self {
         const panel = allocator.create(
             Self,
@@ -683,9 +680,9 @@ pub const Panel = struct {
         var tl_buffer_3: [512]u8 = undefined;
         const hh = @as(usize, @abs(self.height)); // + 1;
         for (0..hh) |row| {
-            if (self.writer.list.len > 3072) {
-                _ = self.writer.flush() catch unreachable;
-            }
+            // if (self.writer.list.len > 3072) {
+            //     _ = self.writer.flush() catch unreachable;
+            // }
             _ = tl.absXY(
                 @abs(self.anchor_x),
                 @abs(self.anchor_y) + @as(u32, @intCast(row)),
@@ -799,9 +796,9 @@ pub const Panel = struct {
     }
 
     fn drawRow(self: *Self, row: usize) void {
-        if (self.writer.list.len > 3072) {
-            _ = self.writer.flush() catch unreachable;
-        }
+        // if (self.writer.list.len > 3072) {
+        //     _ = self.writer.flush() catch unreachable;
+        // }
         var tl_buffer_1: [512]u8 = undefined;
         var tl_buffer_2: [512]u8 = undefined;
         var tl_buffer_3: [512]u8 = undefined;
@@ -1008,32 +1005,32 @@ pub const Panel = struct {
             if (self.render_text_next) |r_text| {
                 // const r_text = self.render_text_next.?;
                 _ = r_text.draw();
-                if (self.writer.list.len > 3072) {
-                    _ = self.writer.flush() catch unreachable;
-                }
+                // if (self.writer.list.len > 3072) {
+                //     _ = self.writer.flush() catch unreachable;
+                // }
             }
             if (self.render_array_next) |r_text| {
                 // const r_text = self.render_array_next.?;
                 _ = r_text.draw();
-                if (self.writer.list.len > 3072) {
-                    _ = self.writer.flush() catch unreachable;
-                }
+                // if (self.writer.list.len > 3072) {
+                //     _ = self.writer.flush() catch unreachable;
+                // }
             }
         }
         _ = self.writer.flush() catch unreachable;
         // Draw other siblings
         if (self.sibling_next) |n| {
             _ = n.draw();
-            if (self.writer.list.len > 3072) {
-                _ = self.writer.flush() catch unreachable;
-            }
+            // if (self.writer.list.len > 3072) {
+            //     _ = self.writer.flush() catch unreachable;
+            // }
         }
         // Draw the "children"
         if (self.child_head) |current_child| {
             _ = current_child.draw();
-            if (self.writer.list.len > 3072) {
-                _ = self.writer.flush() catch unreachable;
-            }
+            // if (self.writer.list.len > 3072) {
+            //     _ = self.writer.flush() catch unreachable;
+            // }
         }
         _ = self.writer.flush() catch unreachable;
         return self;

@@ -13,10 +13,6 @@ const ColorModes = @import(
 const ColorBU = @import("Color.zig").ColorBU;
 const ColorFU = @import("Color.zig").ColorFU;
 
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
-
 /// `TextLine` that contains the text, position, style, etc
 pub const TextLine = struct {
     /// Text to display
@@ -36,14 +32,14 @@ pub const TextLine = struct {
     /// Color/Style
     color: ?ColorStyle = undefined,
     /// Buffered writer
-    writer: *BufWriter,
+    writer: *std.io.BufferedWriter(4096, std.fs.File.Writer), //.Writer,
 
     const Self = @This();
 
     /// Default TextLine drawn with default colors, etc
     /// at current location of the cursor
     pub fn init(
-        writer: *BufWriter,
+        writer: anytype,
         text: []const u8,
     ) Self {
         return Self{

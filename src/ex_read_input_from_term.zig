@@ -11,12 +11,8 @@ const ColorFU = ColorDef.ColorFU;
 const ColorStyle = ColorDef.ColorStyle;
 const ColorModes = ColorDef.ColorModes;
 
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
-
 pub fn main() !void {
-    var buf_writer = BufWriter{};
+    var buf_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
     defer _ = buf_writer.flush() catch unreachable;
     const write_out = std.io.getStdOut().writer();
     const color_test = ColorB.initName(ColorBU.Green);

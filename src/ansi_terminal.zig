@@ -1,11 +1,8 @@
 const std = @import("std");
 const ColorDef = @import("Color.zig");
-const BufWriter = @import(
-    "SimpleBufferedWriter.zig",
-).SimpleBufferedWriter;
 
 /// Save current terminal state and activate an alternative screen
-pub fn saveTerminalState(writer: *BufWriter) void {
+pub fn saveTerminalState(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[?1049h",
         .{},
@@ -13,7 +10,7 @@ pub fn saveTerminalState(writer: *BufWriter) void {
 }
 
 /// Restore terminal screen from saved state
-pub fn restoreTerminalState(writer: *BufWriter) void {
+pub fn restoreTerminalState(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[?1049l",
         .{},
@@ -21,7 +18,7 @@ pub fn restoreTerminalState(writer: *BufWriter) void {
 }
 
 /// Hide cursor
-pub fn disableCursor(writer: *BufWriter) void {
+pub fn disableCursor(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[?25l",
         .{},
@@ -29,7 +26,7 @@ pub fn disableCursor(writer: *BufWriter) void {
 }
 
 /// Show cursor
-pub fn enableCursor(writer: *BufWriter) void {
+pub fn enableCursor(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[?25h",
         .{},
@@ -37,7 +34,7 @@ pub fn enableCursor(writer: *BufWriter) void {
 }
 
 /// Erase from cursor until the end of screen
-pub fn eraseCES(writer: *BufWriter) void {
+pub fn eraseCES(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[0J",
         .{},
@@ -45,7 +42,7 @@ pub fn eraseCES(writer: *BufWriter) void {
 }
 
 /// Erase from cursor until the beginning of screen
-pub fn eraseCBS(writer: *BufWriter) void {
+pub fn eraseCBS(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[1J",
         .{},
@@ -53,7 +50,7 @@ pub fn eraseCBS(writer: *BufWriter) void {
 }
 
 /// Erase the whole screen
-pub fn eraseS(writer: *BufWriter) void {
+pub fn eraseS(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[2J",
         .{},
@@ -61,7 +58,7 @@ pub fn eraseS(writer: *BufWriter) void {
 }
 
 /// Erase saved lines
-pub fn eraseSavedL(writer: *BufWriter) void {
+pub fn eraseSavedL(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[3J",
         .{},
@@ -69,7 +66,7 @@ pub fn eraseSavedL(writer: *BufWriter) void {
 }
 
 /// Erase from cursor until end of line
-pub fn eraseCEL(writer: *BufWriter) void {
+pub fn eraseCEL(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[0K",
         .{},
@@ -77,7 +74,7 @@ pub fn eraseCEL(writer: *BufWriter) void {
 }
 
 /// Erase from cursor until the beginning of line
-pub fn eraseCBL(writer: *BufWriter) void {
+pub fn eraseCBL(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[1K",
         .{},
@@ -85,7 +82,7 @@ pub fn eraseCBL(writer: *BufWriter) void {
 }
 
 /// Erase entire line
-pub fn eraseL(writer: *BufWriter) void {
+pub fn eraseL(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[2K",
         .{},
@@ -93,7 +90,7 @@ pub fn eraseL(writer: *BufWriter) void {
 }
 
 /// Clear screen and move cursor to "home"
-pub fn clearScreen(writer: *BufWriter) void {
+pub fn clearScreen(writer: anytype) void {
     // clear screen
     _ = eraseS(writer);
     // move cursor to "home" position
@@ -101,7 +98,7 @@ pub fn clearScreen(writer: *BufWriter) void {
 }
 
 /// Move terminal cursor to the home position
-pub fn cursorHome(writer: *BufWriter) void {
+pub fn cursorHome(writer: anytype) void {
     _ = writer.writer().print(
         "\x1B[H",
         .{},
@@ -110,7 +107,7 @@ pub fn cursorHome(writer: *BufWriter) void {
 
 /// Move cursor to a given location
 pub fn cursorTo(
-    writer: *BufWriter,
+    writer: anytype,
     line: u32,
     column: u32,
 ) void {
@@ -124,7 +121,7 @@ pub fn cursorTo(
 }
 
 /// Move cursor up n lines
-pub fn cursorUp(writer: *BufWriter, n: ?u32) void {
+pub fn cursorUp(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}A",
@@ -135,7 +132,7 @@ pub fn cursorUp(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor down n lines
-pub fn cursorDown(writer: *BufWriter, n: ?u32) void {
+pub fn cursorDown(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}B",
@@ -146,7 +143,7 @@ pub fn cursorDown(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor right n columns
-pub fn cursorRight(writer: *BufWriter, n: ?u32) void {
+pub fn cursorRight(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}C",
@@ -157,7 +154,7 @@ pub fn cursorRight(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor left n columns
-pub fn cursorLeft(writer: *BufWriter, n: ?u32) void {
+pub fn cursorLeft(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}D",
@@ -168,7 +165,7 @@ pub fn cursorLeft(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor to beginning of next line, n lines down
-pub fn cursorDownB(writer: *BufWriter, n: ?u32) void {
+pub fn cursorDownB(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}E",
@@ -179,7 +176,7 @@ pub fn cursorDownB(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor to beginning of next line, n lines up
-pub fn cursorUpB(writer: *BufWriter, n: ?u32) void {
+pub fn cursorUpB(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}F",
@@ -190,7 +187,7 @@ pub fn cursorUpB(writer: *BufWriter, n: ?u32) void {
 }
 
 /// Move cursor to column n
-pub fn cursorColumn(writer: *BufWriter, n: ?u32) void {
+pub fn cursorColumn(writer: anytype, n: ?u32) void {
     const N = n orelse 1;
     _ = writer.writer().print(
         "\x1B[{d}G",
@@ -202,7 +199,7 @@ pub fn cursorColumn(writer: *BufWriter, n: ?u32) void {
 
 /// Set color by style (background/foreground color + mode)
 pub fn setColorStyle(
-    writer: *BufWriter,
+    writer: anytype,
     style: ColorDef.ColorStyle,
 ) void {
     const colorB = style.bg orelse ColorDef.ColorB.initName(
@@ -227,7 +224,7 @@ pub fn setColorStyle(
 
 /// Set background and foreground color
 pub fn setColorBF(
-    writer: *BufWriter,
+    writer: anytype,
     colorB: ColorDef.ColorB,
     colorF: ColorDef.ColorF,
 ) void {
@@ -237,7 +234,7 @@ pub fn setColorBF(
 
 /// Set foreground color
 pub fn setColorF(
-    writer: *BufWriter,
+    writer: anytype,
     color: ColorDef.ColorF,
 ) void {
     switch (color.type_data.tag()) {
@@ -268,7 +265,7 @@ pub fn setColorF(
 
 /// Set background color
 pub fn setColorB(
-    writer: *BufWriter,
+    writer: anytype,
     color: ColorDef.ColorB,
 ) void {
     switch (color.type_data.tag()) {
@@ -299,7 +296,7 @@ pub fn setColorB(
 
 /// Set color modes (bold, italic, etc)
 pub fn setColorModes(
-    writer: *BufWriter,
+    writer: anytype,
     modes: ColorDef.ColorModes,
 ) void {
     if (modes.Bold) {
@@ -401,7 +398,7 @@ pub fn setColorModes(
 }
 
 /// Set foreground color of text by value
-pub fn setColorFV(writer: *BufWriter, color: u8) void {
+pub fn setColorFV(writer: anytype, color: u8) void {
     _ = writer.writer().print(
         "\x1B[38;5;{}m",
         .{
@@ -411,7 +408,7 @@ pub fn setColorFV(writer: *BufWriter, color: u8) void {
 }
 
 /// Set background color of text by value
-pub fn setColorBV(writer: *BufWriter, color: u8) void {
+pub fn setColorBV(writer: anytype, color: u8) void {
     _ = writer.writer().print(
         "\x1B[48;5;{}m",
         .{
@@ -422,7 +419,7 @@ pub fn setColorBV(writer: *BufWriter, color: u8) void {
 
 /// Set foreground color of text by name
 pub fn setColorFName(
-    writer: *BufWriter,
+    writer: anytype,
     color: ColorDef.ColorFU,
 ) void {
     _ = writer.writer().print(
@@ -435,7 +432,7 @@ pub fn setColorFName(
 
 /// Set background color of text by name
 pub fn setColorBName(
-    writer: *BufWriter,
+    writer: anytype,
     color: ColorDef.ColorBU,
 ) void {
     _ = writer.writer().print(
@@ -448,7 +445,7 @@ pub fn setColorBName(
 
 /// Set both background and foreground color of text by name
 pub fn setColorBFName(
-    writer: *BufWriter,
+    writer: anytype,
     colorB: ?ColorDef.ColorBU,
     colorF: ?ColorDef.ColorFU,
 ) void {
@@ -465,7 +462,7 @@ pub fn setColorBFName(
 
 /// Set foreground color of text using RGB value
 pub fn setColorFRGB(
-    writer: *BufWriter,
+    writer: anytype,
     r: ?u8,
     g: ?u8,
     b: ?u8,
@@ -485,7 +482,7 @@ pub fn setColorFRGB(
 
 /// Set background color of text by RGB value
 pub fn setColorBRGB(
-    writer: *BufWriter,
+    writer: anytype,
     r: ?u8,
     g: ?u8,
     b: ?u8,

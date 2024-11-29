@@ -179,7 +179,7 @@ pub fn main() !void {
             ColorBU.Reset,
         ),
     );
-    _ = buf_writer.flush() catch unreachable;
+    // _ = buf_writer.flush() catch unreachable;
 }
 
 pub fn doAppInputThread(arg: *TheApp) !void {

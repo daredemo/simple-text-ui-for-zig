@@ -180,7 +180,7 @@ pub const RenderTextArray = struct {
                 for (self.coordinates.items, 0..) |item, index| {
                     self.drawItem(p, item, index);
                 }
-                _ = p.writer.flush() catch unreachable;
+                // _ = p.writer.flush() catch unreachable;
             }
         }
         if (self.next_array) |n| {
@@ -1017,7 +1017,7 @@ pub const Panel = struct {
                 // }
             }
         }
-        _ = self.writer.flush() catch unreachable;
+        // _ = self.writer.flush() catch unreachable;
         // Draw other siblings
         if (self.sibling_next) |n| {
             _ = n.draw();
@@ -1032,7 +1032,7 @@ pub const Panel = struct {
             //     _ = self.writer.flush() catch unreachable;
             // }
         }
-        _ = self.writer.flush() catch unreachable;
+        // _ = self.writer.flush() catch unreachable;
         return self;
     }
 };
